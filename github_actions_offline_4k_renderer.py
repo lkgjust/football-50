@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Beat the Keeper - Headless 30 FPS Offline Video Generator with Auto Audio Synthesis
-Natively renders at 1080p and upscales to 4K using FFmpeg for 400% faster rendering.
+Beat the Keeper - Headless 30 FPS Offline Native 4K Video Generator with Auto Audio Synthesis
+Natively renders at true 3840x2160 (4K Ultra HD) resolution.
 """
 
 import os
@@ -17,17 +17,17 @@ import cv2
 import pymunk
 from PIL import Image, ImageDraw, ImageFont
 
-# --- VIDEO CONFIGURATION ---
-WIDTH, HEIGHT = 1920, 1080  # Render at 1080p for 4x speed, upscale to 4K via FFmpeg
+# --- VIDEO CONFIGURATION (TRUE NATIVE 4K ULTRA HD) ---
+WIDTH, HEIGHT = 3840, 2160  
 FPS = 30
-TEMP_VIDEO_RAW = "temp_raw_1080p.mp4"
+TEMP_VIDEO_RAW = "temp_raw_4k.mp4"
 TEMP_SFX_WAV = "temp_sfx.wav"
 FINAL_OUTPUT_FILENAME = "beat_the_keeper_final_video.mp4"
 BGM_FILENAME = "Beat the Keeper - 50 Country Elimination Marble Race.m4a"
 
 # --- PHYSICS CONSTANTS ---
-GRAVITY = 2200.0  # Boosted gravity for fast and natural falls
-BALL_RADIUS = 45  # 4K scale physics radius
+GRAVITY = 2200.0  # Natural gravity falls
+BALL_RADIUS = 45  # True 4K scale physics radius
 SPINNER_SPEED = 3.5
 
 # --- 50 COUNTRIES DATASET ---
@@ -90,7 +90,7 @@ round_targets = [40, 30, 20, 10, 8, 6, 4, 2, 1]
 active_marbles = []
 survivors = []
 eliminated = []
-live_logs = ["System Initialized - Headless Optimized 1080p Engine Ready"]
+live_logs = ["System Initialized - Headless Native 4K Engine Ready"]
 
 # Gradual spawning queue
 spawn_queue = []
@@ -99,7 +99,7 @@ last_spawn_time = 0.0
 # Audio event logger
 sound_events = []
 
-# Video Writer for native 1080p capture (extremely fast)
+# Video Writer for native 4K capture
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 video_writer = cv2.VideoWriter(TEMP_VIDEO_RAW, fourcc, FPS, (WIDTH, HEIGHT))
 
@@ -107,9 +107,9 @@ video_writer = cv2.VideoWriter(TEMP_VIDEO_RAW, fourcc, FPS, (WIDTH, HEIGHT))
 space = pymunk.Space()
 space.gravity = (0, GRAVITY)
 
-# Dynamic 4K to 1080p scaling factors for rendering only
-scale_x = WIDTH / 3840.0
-scale_y = HEIGHT / 2160.0
+# Native 4K scaling factors (1:1 mapping since design is based on 3840x2160 coordinates)
+scale_x = 1.0
+scale_y = 1.0
 
 def sx(val): return int(val * scale_x)
 def sy(val): return int(val * scale_y)
@@ -218,14 +218,14 @@ class CountryMarble:
         self.shape.friction = 0.005
         space.add(self.body, self.shape)
 
-# Cache Fonts with safety fallback
+# Cache Fonts with native 4K optimized sizes!
 try:
-    font_large = ImageFont.truetype("LiberationSans-Bold.ttf", 34)
-    font_medium = ImageFont.truetype("LiberationSans-Bold.ttf", 24)
-    font_small = ImageFont.truetype("LiberationSans-Bold.ttf", 18)
-    font_mono = ImageFont.truetype("LiberationMono-Regular.ttf", 21)
-    font_standings = ImageFont.truetype("LiberationSans-Bold.ttf", 16)
-    font_badge = ImageFont.truetype("LiberationMono-Bold.ttf", 13)
+    font_large = ImageFont.truetype("LiberationSans-Bold.ttf", 68)
+    font_medium = ImageFont.truetype("LiberationSans-Bold.ttf", 48)
+    font_small = ImageFont.truetype("LiberationSans-Bold.ttf", 36)
+    font_mono = ImageFont.truetype("LiberationMono-Regular.ttf", 42)
+    font_standings = ImageFont.truetype("LiberationSans-Bold.ttf", 36)
+    font_badge = ImageFont.truetype("LiberationMono-Bold.ttf", 26)
 except IOError:
     font_large = ImageFont.load_default()
     font_medium = font_large
@@ -234,7 +234,7 @@ except IOError:
     font_standings = font_large
     font_badge = font_large
 
-# Pre-render country flags
+# Pre-render country flags (true 4K scale size)
 flag_cache = {}
 def pre_render_flags():
     for c in countriesData:
@@ -249,7 +249,7 @@ def pre_render_flags():
         else:
             f_draw.rectangle([0, int(r*1.33), r*2, r*2], fill=c["colors"][0])
             
-        f_draw.ellipse([0, 0, r*2, r*2], outline="#ffffff", width=2)
+        f_draw.ellipse([0, 0, r*2, r*2], outline="#ffffff", width=4)
         f_draw.text((r, r), c["code"], fill="#ffffff", font=font_small, anchor="mm")
         flag_cache[c["code"]] = flag_img
 
@@ -306,7 +306,7 @@ sound_wave_cache = {
     'fail': gen_sound_wave(0.25, lambda t: np.sin(2 * np.pi * 100 * t), lambda t: np.exp(-5 * t))
 }
 
-print("Headless Physics Renderer Started (1080p fast mode)...", flush=True)
+print("Headless Physics Renderer Started (True 4K Native mode)...", flush=True)
 
 # --- MAIN AUTOMATED RENDER LOOP ---
 while current_round <= 9:
@@ -366,7 +366,7 @@ while current_round <= 9:
         # Spinner kick collision
         for end_x, end_y in arm_ends:
             dist = dist_to_segment(pos.x, pos.y, cx, cy, end_x, end_y)
-            if dist < (BALL_RADIUS + 12):
+            if dist < (BALL_RADIUS + sx(12)):
                 if frame_count - m.last_spinner_hit > 15:
                     m.body.velocity = (3480 + random.randint(-150, 150), -1440 - random.randint(-50, 50))
                     sound_events.append((frame_count, 'kick'))
@@ -435,6 +435,7 @@ while current_round <= 9:
         
         # Write static summary frames (3 seconds at 30 FPS = 90 frames)
         for _ in range(90):
+            frame_count += 1
             img = Image.new("RGBA", (WIDTH, HEIGHT), (15, 23, 42, 255))
             draw = ImageDraw.Draw(img)
             
@@ -442,20 +443,20 @@ while current_round <= 9:
             draw.text((WIDTH//2, 180), f"Safe: {len(survivors)}  |  Eliminated: {len(eliminated)}", fill="#fbbf24", font=font_medium, anchor="mm")
             
             # Safe list
-            draw.text((150, 260), "SAFE COUNTRIES:", fill="#34d399", font=font_medium)
+            draw.text((250, 260), "SAFE COUNTRIES:", fill="#34d399", font=font_medium)
             for idx, c in enumerate(survivors):
-                cx = 150 + (idx % 15) * 110
-                cy = 340 + (idx // 15) * 110
-                flag_thumbnail = flag_cache[c.code].resize((60, 60))
-                img.paste(flag_thumbnail, (cx - 30, cy - 30), flag_thumbnail)
+                cx = 250 + (idx % 12) * 120
+                cy = 340 + (idx // 12) * 110
+                flag_thumbnail = flag_cache[c.code]
+                img.paste(flag_thumbnail, (cx - BALL_RADIUS, cy - BALL_RADIUS), flag_thumbnail)
                 
             # Elim list
-            draw.text((150, 680), "ELIMINATED COUNTRIES:", fill="#f87171", font=font_medium)
-            for idx, c in enumerate(eliminated[-15:]):
-                cx = 150 + (idx % 15) * 110
+            draw.text((250, 680), "ELIMINATED COUNTRIES:", fill="#f87171", font=font_medium)
+            for idx, c in enumerate(eliminated[-10:]):
+                cx = 250 + (idx % 10) * 120
                 cy = 760
-                flag_thumbnail = flag_cache[c["code"]].resize((60, 60))
-                img.paste(flag_thumbnail, (cx - 30, cy - 30), flag_thumbnail)
+                flag_thumbnail = flag_cache[c["code"]]
+                img.paste(flag_thumbnail, (cx - BALL_RADIUS, cy - BALL_RADIUS), flag_thumbnail)
                 
             draw.text((WIDTH//2, 1000), "Preparing next round in 3 seconds...", fill="#64748b", font=font_small, anchor="mm")
             
@@ -464,11 +465,16 @@ while current_round <= 9:
             
         current_round += 1
         round_frame_counter = 0
-        if current_round <= 9:
-            spawn_marbles_for_round()
-            continue
+        
+        # STABLE WORKFLOW AUTOMATION TERMINATION LOGIC:
+        # Gracefully exit the while-loop BEFORE executing code blocks that index round_targets
+        if current_round > 9:
+            break
             
-    # --- RASTERIZE AND DRAW 1080p IMAGES ---
+        spawn_marbles_for_round()
+        continue
+            
+    # --- RASTERIZE AND DRAW NATIVE 4K IMAGES ---
     img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
     draw = ImageDraw.Draw(img)
     
@@ -476,24 +482,24 @@ while current_round <= 9:
     target_count = round_targets[current_round - 1]
     elim_count = (round_targets[current_round - 2] if current_round > 1 else 50) - target_count
 
-    # Left Box
-    draw.rectangle([0, 0, sx(525), HEIGHT], fill=(15, 23, 42, 230), outline=(30, 41, 59, 255), width=3)
+    # Left Box (Commentary panel)
+    draw.rectangle([0, 0, sx(525), HEIGHT], fill=(15, 23, 42, 230), outline=(30, 41, 59, 255), width=5)
     draw.text((sx(262), 80), "MATCH TELEMETRY", fill="#ffffff", font=font_large, anchor="mm")
     
     draw.text((sx(262), 185), f"TARGET: {round_targets[current_round-2] if current_round > 1 else 50} ➔ {target_count} SAFE", fill="#fbbf24", font=font_medium, anchor="mm")
     draw.text((sx(262), 230), f"(ELIMINATING {elim_count} COUNTRIES)", fill="#fbbf24", font=font_small, anchor="mm")
     
     for idx, log in enumerate(live_logs):
-        draw.text((50, 305 + idx * 45), log, fill="#cbd5e1", font=font_small)
+        draw.text((50, 305 + idx * 60), log, fill="#cbd5e1", font=font_small)
 
     # Right standings (2 symmetric columns)
-    draw.rectangle([sx(2965), 0, WIDTH, HEIGHT], fill=(15, 23, 42, 230), outline=(30, 41, 59, 255), width=3)
+    draw.rectangle([sx(2965), 0, WIDTH, HEIGHT], fill=(15, 23, 42, 230), outline=(30, 41, 59, 255), width=5)
     draw.text((sx(3402), 80), "STANDINGS", fill="#ffffff", font=font_large, anchor="mm")
     
     for idx, c in enumerate(countriesData):
         col = idx // 25
         row = idx % 25
-        ly = 195 + row * 38
+        ly = 195 + row * 76
         
         if col == 0: 
             fx, nx, status_x = sx(3003), sx(3040), sx(3384)
@@ -510,8 +516,7 @@ while current_round <= 9:
             badge_color = "#34d399"
             
         flag_icon = flag_cache[c["code"]]
-        small_icon = flag_icon.resize((24, 24))
-        img.paste(small_icon, (fx - 12, ly - 12), small_icon)
+        img.paste(flag_icon, (fx - BALL_RADIUS, ly - BALL_RADIUS), flag_icon)
         
         draw.text((nx, ly), c["name"][:11], fill="#f1f5f9", font=font_standings, anchor="lm")
         draw.text((status_x, ly), status_label, fill=badge_color, font=font_badge, anchor="rm")
@@ -519,35 +524,34 @@ while current_round <= 9:
     # Static Pegs and boundaries
     for p_coord in pegs_coords:
         px, py = sx(p_coord[0]), sy(p_coord[1])
-        draw.ellipse([px - 15, py - 15, px + 15, py + 15], fill="#555555", outline="#333333", width=3)
+        draw.ellipse([px - 30, py - 30, px + 30, py + 30], fill="#555555", outline="#333333", width=6)
 
     # Draw spinner blades
     for end_x, end_y in arm_ends:
-        draw.line([(sx(cx), sy(cy)), (sx(end_x), sy(end_y))], fill="#2563eb", width=9)
-        draw.ellipse([sx(end_x) - 7, sy(end_y) - 7, sx(end_x) + 7, sy(end_y) + 7], fill="#ffffff")
+        draw.line([(sx(cx), sy(cy)), (sx(end_x), sy(end_y))], fill="#2563eb", width=18)
+        draw.ellipse([sx(end_x) - 14, sy(end_y) - 14, sx(end_x) + 14, sy(end_y) + 14], fill="#ffffff")
 
     # Draw rolling marbles with trails
     for m in active_marbles:
-        mx, my = sx(m.body.position.x), sy(m.body.position.y)
+        mx, my = int(m.body.position.x), int(m.body.position.y)
         for t_idx, trail_p in enumerate(m.trail):
             alpha = int((t_idx + 1) / len(m.trail) * 180)
-            draw.ellipse([sx(trail_p[0]) - 9, sy(trail_p[1]) - 9, sx(trail_p[0]) + 9, sy(trail_p[1]) + 9], fill=(255, 255, 255, alpha))
+            draw.ellipse([trail_p[0] - 18, trail_p[1] - 18, trail_p[0] + 18, trail_p[1] + 18], fill=(255, 255, 255, alpha))
         
         flag_img = flag_cache[m.code]
-        img.paste(flag_img, (mx - sx(BALL_RADIUS), my - sy(BALL_RADIUS)), flag_img)
+        img.paste(flag_img, (mx - BALL_RADIUS, my - BALL_RADIUS), flag_img)
 
     # Survivors Box
-    draw.rectangle([sx(1145), 140, sx(2345), 340], fill=(0, 0, 0, 255), outline=(30, 41, 59, 255), width=4)
+    draw.rectangle([sx(1145), 140, sx(2345), 340], fill=(0, 0, 0, 255), outline=(30, 41, 59, 255), width=8)
     draw.text((sx(1745), 95), "Survivors Box", fill="#22c55e", font=font_medium, anchor="mm")
     
     for idx, c in enumerate(survivors):
         col = idx % 20
         row = idx // 20
-        fsx = sx(1190) + col * 29
-        fsy = 195 + row * 30
+        fsx = sx(1190) + col * 58
+        fsy = 195 + row * 60
         flag_icon = flag_cache[c.code]
-        small_icon = flag_icon.resize((18, 18))
-        img.paste(small_icon, (fsx - 9, fsy - 9), small_icon)
+        img.paste(flag_icon, (fsx - BALL_RADIUS, fsy - BALL_RADIUS), flag_icon)
         
     draw.text((sx(1745), 410), f"Spots left: {target_count - len(survivors)}", fill="#ffffff", font=font_large, anchor="mm")
 
@@ -559,7 +563,7 @@ while current_round <= 9:
     go_x, go_y = sx(defenderGoalie.position.x), sy(defenderGoalie.position.y)
     draw_proportional_footballer(img, go_x, go_y, sx(80), sy(240), '#a855f7', '#7e22ce')
 
-    draw.rectangle([sx(2625), sy(1100), sx(2955), sy(2065)], outline="#ffffff", width=4)
+    draw.rectangle([sx(2625), sy(1100), sx(2955), sy(2065)], outline="#ffffff", width=8)
     draw.rectangle([sx(940), sy(2095), sx(1834), sy(2160)], fill="#22c55e")
     draw.rectangle([sx(2325), sy(2095), sx(2955), sy(2160)], fill="#22c55e")
 
@@ -569,7 +573,7 @@ while current_round <= 9:
     mins = (total_sec % 3600) // 60
     secs = total_sec % 60
     clock_str = f"Elapsed Time: {hrs:02d}:{mins:02d}:{secs:02d}"
-    draw.text((WIDTH - 250, 40), clock_str, fill="#34d399", font=font_medium)
+    draw.text((WIDTH - 550, 40), clock_str, fill="#34d399", font=font_medium)
 
     # Frame output
     opencv_image = cv2.cvtColor(np.array(img), cv2.COLOR_RGBA2BGR)
@@ -579,7 +583,7 @@ while current_round <= 9:
         print(f"Progression: Round {current_round}/9 | Captured {frame_count} frames | Time: {hrs:02d}:{mins:02d}:{secs:02d}", flush=True)
 
 video_writer.release()
-print("Success! Visual rendering complete. Starting Audio Track synthesis...", flush=True)
+print("Success! Native 4K visual rendering complete. Starting Audio Track synthesis...", flush=True)
 
 # --- HIGH-QUALITY SYNTHETIC AUDIO ENGINE ---
 try:
@@ -603,16 +607,15 @@ try:
         wav_file.setframerate(sample_rate)
         wav_file.writeframes(master_audio.tobytes())
         
-    print("Step 5: Merging Video, Music, and Upscaling to 4K via FFmpeg...", flush=True)
+    print("Step 5: Merging Video, Music, and SFX in 4K via FFmpeg...", flush=True)
     if os.path.exists(BGM_FILENAME):
-        # Scale filter complex upsamples standard 1080p stream to pristine 4K using lanczos algorithm
-        cmd = f'ffmpeg -y -i {TEMP_VIDEO_RAW} -i {TEMP_SFX_WAV} -i "{BGM_FILENAME}" -filter_complex "[0:v]scale=3840:2160:flags=lanczos[v];[1:a][2:a]amix=inputs=2:duration=first[a]" -map "[v]" -map "[a]" -c:v libx264 -preset fast -crf 18 -r 30 "{FINAL_OUTPUT_FILENAME}"'
+        cmd = f'ffmpeg -y -i {TEMP_VIDEO_RAW} -i {TEMP_SFX_WAV} -i "{BGM_FILENAME}" -filter_complex "[1:a][2:a]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v libx264 -preset fast -crf 18 -r 30 "{FINAL_OUTPUT_FILENAME}"'
     else:
-        cmd = f'ffmpeg -y -i {TEMP_VIDEO_RAW} -i {TEMP_SFX_WAV} -filter_complex "[0:v]scale=3840:2160:flags=lanczos[v]" -map "[v]" -map 1:a -c:v libx264 -preset fast -crf 18 -r 30 "{FINAL_OUTPUT_FILENAME}"'
+        cmd = f'ffmpeg -y -i {TEMP_VIDEO_RAW} -i {TEMP_SFX_WAV} -c:v libx264 -preset fast -crf 18 -r 30 "{FINAL_OUTPUT_FILENAME}"'
 
     subprocess.run(cmd, shell=True, check=True)
     if os.path.exists(TEMP_SFX_WAV): os.remove(TEMP_SFX_WAV)
     if os.path.exists(TEMP_VIDEO_RAW): os.remove(TEMP_VIDEO_RAW)
-    print(f"\n🎉 4K VIDEO COMPILED SUCCESSFULLY: {FINAL_OUTPUT_FILENAME}", flush=True)
+    print(f"\n🎉 NATIVE 4K VIDEO COMPILED SUCCESSFULLY: {FINAL_OUTPUT_FILENAME}", flush=True)
 except Exception as e:
     print(f"Error during audio compilation: {e}", flush=True)

@@ -9,10 +9,10 @@ jobs:
 
     steps:
     - name: Checkout Workspace Code Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Node.js Runtime Environment
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 18
 
@@ -35,7 +35,7 @@ jobs:
         node render.js
 
     - name: Upload Upscaled Pristine 4K MP4 Video to Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: beat-the-keeper-4k-upscaled-video
         path: beat_the_keeper_4k_lanczos.mp4

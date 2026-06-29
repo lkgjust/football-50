@@ -1,0 +1,38 @@
+name: Render 4K HTML Marble Race
+
+on:
+  workflow_dispatch: # Allows manual trigger on GitHub Actions
+
+jobs:
+  render-video:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python packages & Playwright
+        run: |
+          pip install playwright opencv-python numpy
+          playwright install --with-deps chromium
+
+      - name: Run Playwright frame-by-frame 4K capture
+        run: |
+          python -u github_actions_html_renderer.py
+
+      - name: Upload pristine 4K video to GitHub Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: beat-the-keeper-4k-video
+          path: beat_the_keeper_final_video.mp4
+          retention-days: 7

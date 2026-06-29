@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beat the Keeper - 4K Ultra HD Recording Studio</title>
-    <!-- High-quality layout styling ke liye Tailwind CSS -->
+    <!-- Tailwind CSS for high-quality layout styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,7 +18,7 @@
         .mono-font {
             font-family: 'Share Tech Mono', monospace;
         }
-        /* Clean look ke liye custom scrollbars */
+        /* Custom scrollbars for clean look */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -33,7 +33,7 @@
 </head>
 <body class="h-full flex flex-col overflow-hidden select-none">
 
-    <!-- EXTERNAL HEADER: Controls aur recording widgets (Recording screen se bahar rakha gaya hai) -->
+    <!-- EXTERNAL HEADER: Controls and recording widgets (Kept outside recording screen) -->
     <header class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between shrink-0">
         <div class="flex items-center space-x-3">
             <div class="bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center shadow-lg animate-pulse">
@@ -43,51 +43,51 @@
                 <h1 class="text-base font-black tracking-tight text-white flex items-center gap-2">
                     BEAT THE KEEPER <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">4K ULTRA HD SIMULATOR EDITION</span>
                 </h1>
-                <p class="text-[11px] text-slate-400">Commentary, game arena, aur standings canvas ke andar integrated hain seamless 4K recording ke liye.</p>
+                <p class="text-[11px] text-slate-400">Commentary, game arena, and standings are integrated inside the canvas for seamless 4K recording with Audio.</p>
             </div>
         </div>
         
-        <!-- Simulation HUD aur Controls -->
+        <!-- Simulation HUD & Controls -->
         <div class="flex items-center space-x-4">
             <!-- Dynamic Timer Clock -->
             <div class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center space-x-2">
                 <i class="fa-regular fa-clock text-blue-400"></i>
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Bita Hua Samay:</span>
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Elapsed Time:</span>
                 <span id="session-timer" class="mono-font text-sm font-bold text-emerald-400 tracking-wider">00:00:00</span>
             </div>
 
-            <!-- Creator's Lag-free Recording Guide -->
+            <!-- Creator's 0% Load Recording Guide -->
             <div class="bg-amber-950/40 border border-amber-500/30 px-3.5 py-1.5 rounded-lg flex items-center space-x-2">
                 <i class="fa-solid fa-circle-info text-amber-400 text-sm"></i>
-                <span class="text-[11px] text-amber-300 font-semibold">0% Lag Record Ke Liye: <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700">Win + Alt + R</kbd> (Xbox Bar) ya OBS</span>
+                <span class="text-[11px] text-amber-300 font-semibold">For 0% Lag Record: <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700">Win + Alt + R</kbd> (Xbox Bar) or OBS</span>
             </div>
 
             <!-- Start Match Controller Button -->
             <button id="start-btn" onclick="startGameManual()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
                 <i class="fa-solid fa-play"></i>
-                <span id="start-text">Match Shuru Karein</span>
+                <span id="start-text">Start Match</span>
             </button>
 
-            <!-- Video Recording Controller (4K Audio + Video dono record karta hai) -->
+            <!-- Video Recording Controller (Now records 4K Audio + Video) -->
             <button id="record-btn" onclick="toggleRecording()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
                 <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                 </span>
-                <span id="record-text">Browser Record (Audio ke sath)</span>
+                <span id="record-text">Browser Record (With Audio)</span>
             </button>
 
             <!-- Background Music Player -->
             <div class="bg-slate-850 px-3 py-1.5 rounded-lg flex items-center space-x-3 border border-slate-750">
                 <audio id="bgm-player" loop src="Beat the Keeper - 50 Country Elimination Marble Race.m4a"></audio>
                 <button onclick="toggleBGM()" id="bgm-btn" class="px-2.5 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1">
-                    <i class="fa-solid fa-play"></i> Music Chalayein
+                    <i class="fa-solid fa-play"></i> Play Music
                 </button>
             </div>
 
-            <!-- Simulation Speed Modifiers (1x se 100x tak adjust karein) -->
+            <!-- Simulation Speed Modifiers (Natively scaled from 1x to 100x) -->
             <div class="bg-slate-800 px-3 py-1 rounded-lg flex items-center space-x-2 border border-slate-700">
-                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gati (Speed):</span>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Speed:</span>
                 <div class="flex space-x-1" id="speed-controls">
                     <button onclick="setSimSpeed(1)" id="speed-1x" class="px-2 py-0.5 rounded text-xs font-bold bg-blue-600 text-white transition">1x</button>
                     <button onclick="setSimSpeed(10)" id="speed-10x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">10x</button>
@@ -103,9 +103,9 @@
 
     <!-- MAIN RECORDING FRAMEWORK ZONE -->
     <main class="flex-1 bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        <!-- Aspect Ratio box container responsive scaling ke liye -->
+        <!-- Aspect Ratio box container scaled responsively -->
         <div class="relative w-full max-w-[1500px] aspect-[16/9] bg-black border border-slate-850 rounded-2xl overflow-hidden shadow-2xl">
-            <!-- Widescreen 3840 x 2160 rendering canvas pristine 4K quality ke liye -->
+            <!-- Widescreen 3840 x 2160 rendering canvas natively for pristine 4K -->
             <canvas id="physics-canvas" width="3840" height="2160" class="w-full h-full block bg-black"></canvas>
         </div>
     </main>
@@ -119,14 +119,14 @@
         
         let simSpeed = 1;
         let isSimPaused = false;
-        let gameStarted = false; // Jab tak start ya record button na daba ho, autoplay ko rokta hai
+        let gameStarted = false; // Prevents autoplay until start button/recording is pressed
         let simTime = 0;
         let matchDuration = 0; // Simulated timer
         let renderScale = 1.0; // Dynamic scale: 1.0 = 4K rendering, 0.5 = 1080p superfast headless render
 
-        // 30 FPS throttling state variables globally declare kiye hain taaki ReferenceErrors na ho
+        // 30 FPS throttling state variables globally declared to avoid ReferenceErrors
         let lastRenderTime = 0;
-        const fpsInterval = 1000 / 30; // ~33.33ms target frame interval
+        const fpsInterval = 1000 / 30; // ~33.33ms target
 
         // Headless execution state check
         const urlParams = new URLSearchParams(window.location.search);
@@ -135,15 +135,15 @@
         // 9-Round Structured Elimination Progression
         let currentRound = 1;
         const roundConfigs = [
-            { id: 1, startCount: 50, targetSurvivors: 40, label: "Round 1 (50 se 40)" },
-            { id: 2, startCount: 40, targetSurvivors: 30, label: "Round 2 (40 se 30)" },
-            { id: 3, startCount: 30, targetSurvivors: 20, label: "Round 3 (30 se 20)" },
-            { id: 4, startCount: 20, targetSurvivors: 10, label: "Round 4 (20 se 10)" },
-            { id: 5, startCount: 10, targetSurvivors: 8, label: "Round 5 (10 se 8)" },
-            { id: 6, startCount: 8, targetSurvivors: 6, label: "Round 6 (8 se 6)" },
-            { id: 7, startCount: 6, targetSurvivors: 4, label: "Round 7 (6 se 4)" },
-            { id: 8, startCount: 4, targetSurvivors: 2, label: "Semifinal (4 se 2)" },
-            { id: 9, startCount: 2, targetSurvivors: 1, label: "Grand Finale (2 se 1)" }
+            { id: 1, startCount: 50, targetSurvivors: 40, label: "Round 1 (50 to 40)" },
+            { id: 2, startCount: 40, targetSurvivors: 30, label: "Round 2 (40 to 30)" },
+            { id: 3, startCount: 30, targetSurvivors: 20, label: "Round 3 (30 to 20)" },
+            { id: 4, startCount: 20, targetSurvivors: 10, label: "Round 4 (20 to 10)" },
+            { id: 5, startCount: 10, targetSurvivors: 8, label: "Round 5 (10 to 8)" },
+            { id: 6, startCount: 8, targetSurvivors: 6, label: "Round 6 (8 to 6)" },
+            { id: 7, startCount: 6, targetSurvivors: 4, label: "Round 7 (6 to 4)" },
+            { id: 8, startCount: 4, targetSurvivors: 2, label: "Semifinal (4 to 2)" },
+            { id: 9, startCount: 2, targetSurvivors: 1, label: "Grand Finale (2 to 1)" }
         ];
 
         // Spawning queue properties
@@ -169,10 +169,10 @@
         let recordedChunks = [];
         let isRecording = false;
 
-        // Custom scripted override lists (Protected countries jo Round 5 tak surakshit rahenge)
+        // Custom scripted override lists (Protected countries that must survive until Round 5)
         const protectedCountries = ["FR", "AR", "ES", "GB", "BR", "NL", "PT", "MX", "BE", "US"];
 
-        // Live telemetry logs jo canvas par dikhenge
+        // Live telemetry arrays inside canvas
         let liveLogs = [];
 
         // Automation overlay counters
@@ -186,15 +186,15 @@
         let bgmSource = null;
         let soundEnabled = true;
 
-        // Offscreen canvas cache country flags ke liye (CPU/GPU overhead kam karne ke liye)
+        // Offscreen canvas cache for country flags (Prevents CPU/GPU overhead)
         const flagCache = {};
 
         // Speed optimization: Sync pattern cycles
         let roundTimer = 0; 
         let currentScale = 1.0; 
-        let isDefendersWindowOpen = false; // Kya defense ke beech ka rasta khula hai
+        let isDefendersWindowOpen = false; // Tracks if defensive gap is currently open
 
-        // Pure 50 desh ka dataset
+        // Complete 50 countries dataset
         const countriesData = [
             { name: "Argentina", code: "AR", colors: ["#74ACDF", "#FFFFFF", "#F6B426"] },
             { name: "Australia", code: "AU", colors: ["#00008B", "#FF0000", "#FFFFFF"] },
@@ -248,7 +248,7 @@
             { name: "Vietnam", "code": "VN", "colors": ["#DA251D", "#FFFF00", "#DA251D"] }
         ];
 
-        // Dynamic 1080p coordinate projection scaler helper function
+        // Dynamic coordinate projection scaler helper function
         window.setRenderScale = function(scale) {
             renderScale = scale;
             mainCanvas.width = 3840 * scale;
@@ -256,7 +256,7 @@
             drawFrame();
         };
 
-        // Offscreen pre-rendering engine (Sabhi static assets ko ek bar generate karta hai performance badhane ke liye)
+        // Offscreen pre-rendering engine (Builds static assets exactly once to remove CPU/GPU overhead)
         function preRenderFlags() {
             countriesData.forEach(country => {
                 const size = 250; // High resolution 250px template
@@ -323,14 +323,14 @@
                 }
                 c.restore();
 
-                // Gol borders ke sath safed border lines
+                // Standard white stroke border around the circle
                 c.beginPath();
                 c.arc(r, r, r - 5, 0, Math.PI * 2);
                 c.strokeStyle = '#ffffff';
                 c.lineWidth = 10;
                 c.stroke();
 
-                // Desh ke code ke liye bold textual display
+                // Country text label overlay (Legible stroke format)
                 c.fillStyle = '#ffffff';
                 c.strokeStyle = '#000000';
                 c.lineWidth = 14;
@@ -350,14 +350,14 @@
             
             if (player.paused) {
                 player.play().then(() => {
-                    btn.innerHTML = `<i class="fa-solid fa-pause"></i> Music Rokein`;
+                    btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause Music`;
                     btn.className = "px-2.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1";
                 }).catch(err => {
-                    console.warn("Autoplay block hua:", err);
+                    console.warn("Autoplay blocked:", err);
                 });
             } else {
                 player.pause();
-                btn.innerHTML = `<i class="fa-solid fa-play"></i> Music Chalayein`;
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> Play Music`;
                 btn.className = "px-2.5 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1";
             }
         }
@@ -367,27 +367,27 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 audioDestination = audioCtx.createMediaStreamDestination();
 
-                // BGM Player ko output speaker aur record destination dono se connect karein
+                // Route BGM Player to both output speakers and recording destination
                 const player = document.getElementById('bgm-player');
                 try {
                     bgmSource = audioCtx.createMediaElementSource(player);
                     bgmSource.connect(audioCtx.destination);
                     bgmSource.connect(audioDestination);
                 } catch(e) {
-                    console.warn("AudioContext local CORS simat. BGM normal chalega par WebM recording me shayad na aaye.", e);
+                    console.warn("AudioContext local CORS restriction. Playing normally but BGM will skip in WebM track.", e);
                 }
             }
         }
 
         function playSound(type) {
-            if (!soundEnabled || isHeadlessMode) return; // Headless mode me dummy process ke liye audio calculations bypass
+            if (!soundEnabled || isHeadlessMode) return; // Bypass audio play overhead in headless automated script
             initAudio();
             try {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 
-                // Synthesizer audio ko headphones/speakers aur video recorder dono par bhejein
+                // Route Synthesizer sounds to headphones/speakers AND the screen recorder!
                 gain.connect(audioCtx.destination);
                 if (audioDestination) {
                     gain.connect(audioDestination);
@@ -444,21 +444,25 @@
             mainCanvas = document.getElementById('physics-canvas');
             ctx = mainCanvas.getContext('2d');
             
-            // Clean graphics cache generate karein
+            // Generate clean graphics cache exactly once
             preRenderFlags();
             
             buildSimulationReplica();
             resetGame();
 
-            // Headless mode check: isme loop bypass aur auto initialization on ho jata hai
+            // Headless mode check: real-time automated browser-side recording active
             if (isHeadlessMode) {
-                console.log("Deterministic Headless Rendering Pipeline Ready!");
-                // 1080p standard capture optimal scaling preset set karein (400% CPU boost!)
-                window.setRenderScale(0.5);
-                // Simulation automatically prepare and start
-                gameStarted = true;
-                isSimPaused = false;
-                startRound(1);
+                console.log("Real-time Headless Recording Pipeline Active!");
+                // Native 4K capture scale active
+                window.setRenderScale(1.0);
+                
+                // Audio initialization safety bypass trigger
+                soundEnabled = true;
+                
+                // Delay buffer for launch stabilization
+                setTimeout(() => {
+                    toggleRecording(); 
+                }, 1500);
             }
         };
 
@@ -480,38 +484,38 @@
             gameStarted = true;
             isSimPaused = false;
             
-            // Ek baar match chalne par button ko band karein
+            // Disable manual start button once match is successfully running
             const startBtn = document.getElementById('start-btn');
             if (startBtn) {
                 startBtn.disabled = true;
                 startBtn.className = "px-3.5 py-1.5 bg-slate-800 text-slate-500 rounded-lg text-xs font-bold cursor-not-allowed flex items-center gap-1.5 shadow-none";
-                document.getElementById('start-text').textContent = "Match Chal Raha Hai";
+                document.getElementById('start-text').textContent = "Match Running";
             }
-            resetGame(); // Match freshly reset karein jab manual start ho!
+            resetGame(); // Ensure countries and rounds are freshly reset on manual start!
             startRound(1);
         }
 
         function buildSimulationReplica() {
-            // Tezi se movement ke liye badhi hui gravity set ki gayi hai
+            // Boosted gravity scale for lightning fast drops and natural movement
             engine = Engine.create({ gravity: { y: 1.65, scale: 0.001 } });
             world = engine.world;
 
-            // Bahari boundaries (3840 x 2160 container coordinates par base hai)
+            // Outside Boundaries (Mapping on a 3840 x 2160 container coordinates)
             const floor = Bodies.rectangle(1920, 2180, 3840, 80, { isStatic: true });
             const ceiling = Bodies.rectangle(1920, -40, 3840, 80, { isStatic: true });
             const leftWall = Bodies.rectangle(-40, 1080, 80, 2160, { isStatic: true });
             const rightWall = Bodies.rectangle(3880, 1080, 80, 2160, { isStatic: true });
             World.add(world, [floor, ceiling, leftWall, rightWall]);
 
-            // STRICT SANDBOX PARTITIONS (Gendon ko side panel overlays se bachaane ke liye)
+            // STRICT SANDBOX PARTITIONS (Prevents balls/goals from clipping into sidebar overlays!)
             const playAreaLeftWall = Bodies.rectangle(535, 1080, 20, 2160, { isStatic: true, label: 'wall' });
             const playAreaRightWall = Bodies.rectangle(2955, 1080, 20, 2160, { isStatic: true, label: 'wall' });
             World.add(world, [playAreaLeftWall, playAreaRightWall]);
 
-            // Upar ka sloped platform jo niche left ki taraf jhuka hai (Left shift: 175px)
+            // Top Sloped platform slanted DOWN to the left (Shifted left by 175px)
             const topSlope = Bodies.rectangle(1937, 130, 1996, 30, {
                 isStatic: true,
-                angle: -0.062, 
+                angle: -0.062, // Steeper slide down to the left
                 friction: 0.0,
                 label: 'wall'
             });
@@ -519,11 +523,11 @@
             const topBoundaryWall = Bodies.rectangle(1937, 40, 1996, 15, { isStatic: true, label: 'wall' });
             World.add(world, [topSlope, topBoundaryWall]);
 
-            // Chute Divider jo Plinko chute ko baki active turf se alag karta hai (Left shift: 175px)
+            // Chute Divider separating vertical Plinko chute from active field turf (Shifted left by 175px)
             const chuteWall = Bodies.rectangle(940, 1250, 25, 1750, { isStatic: true, label: 'wall' });
             World.add(world, chuteWall);
 
-            // Left Plinko Chute static pegs (Left shift: 175px)
+            // Left Plinko Chute static pegs scaled appropriately (Shifted left by 175px)
             const pegs = [
                 Bodies.circle(687, 512, 50, { isStatic: true, label: 'peg' }),
                 Bodies.circle(782, 725, 50, { isStatic: true, label: 'peg' }),
@@ -534,41 +538,44 @@
             ];
             World.add(world, pegs);
 
-            // Spinner center (Left shift: 175px)
+            // Spinner center (Shifted left by 175px to x = 728, y = 1995)
             bootSpinner = Bodies.rectangle(728, 1995, 230, 20, {
                 isStatic: true,
                 label: 'boot_spinner'
             });
             World.add(world, bootSpinner);
 
-            // Spinner ke niche ke left aur right rounded corners (50px Radius)
+            // Left & Right Rounded Corners under the rotating spinner (Radius = 50px matching request)
             const R = 50;
             const leftCornerBodies = [];
             const rightCornerBodies = [];
             for (let i = 0; i <= 12; i++) {
                 const alpha = (i / 12) * (Math.PI / 2);
+                // Left rounded corner arc
                 const lcx = 535 + R - R * Math.cos(alpha);
                 const lcy = 2095 - R + R * Math.sin(alpha);
                 leftCornerBodies.push(Bodies.circle(lcx, lcy, 12, { isStatic: true, label: 'wall' }));
 
+                // Right rounded corner arc
                 const rcx = 940 - R + R * Math.cos(alpha);
                 const rcy = 2095 - R + R * Math.sin(alpha);
                 rightCornerBodies.push(Bodies.circle(rcx, rcy, 12, { isStatic: true, label: 'wall' }));
             }
             World.add(world, [...leftCornerBodies, ...rightCornerBodies]);
 
-            // Goalkeepers apne natural size par restore honge
+            // Rebuilt dynamically inside startRound to avoid scaling leaks
+            // Keepers remain at their natural visual sizes! No shrinking needed anymore.
             defenderSweeper = Bodies.rectangle(1365, 1810, 55, 180, { isStatic: true, label: 'defender' }); 
             defenderJumper = Bodies.rectangle(1825, 1230, 90, 240, { isStatic: true, label: 'defender' });  
             defenderGoalie = Bodies.rectangle(2503, 1740, 65, 180, { isStatic: true, label: 'defender' });  
             World.add(world, [defenderSweeper, defenderJumper, defenderGoalie]);
 
-            // Pit gap ke aaspas ke ground supports (Left shift: 175px)
+            // Ground supports around the pit gap (Shifted left by 175px)
             const groundLeft = Bodies.rectangle(1378, 2095, 894, 64, { isStatic: true, label: 'wall' });
             const groundRight = Bodies.rectangle(2790, 2095, 330, 64, { isStatic: true, label: 'wall' });
             World.add(world, [groundLeft, groundRight]);
 
-            // Blocked gendon ko detect karne ke liye deep pit gap sensor
+            // Deep pit gap sensor to detect blocked balls (Shifted left by 175px)
             sensors.pitGap = Bodies.rectangle(2075, 2160, 500, 250, {
                 isStatic: true,
                 isSensor: true,
@@ -576,12 +583,13 @@
             });
             World.add(world, sensors.pitGap);
 
-            // Unche Goalpost net structures jo upar se gendon ko aasani se fislate hain
+            // White Goalpost net height significantly increased (from 1640 top to 1100 top, height 965px!)
+            // Stilted at angle to slide balls down top smoothly
             const goalTop = Bodies.rectangle(2790, 1100, 330, 34, { isStatic: true, angle: -0.22, label: 'wall' });
             const goalLeftWall = Bodies.rectangle(2625, 1583, 34, 965, { isStatic: true, label: 'wall' });
             World.add(world, [goalTop, goalLeftWall]);
 
-            // Goal scoring sensor zone
+            // Goal scoring sensor zone significantly stretched to match the new tall goal structure
             sensors.goalTrigger = Bodies.rectangle(2790, 1583, 290, 940, {
                 isStatic: true,
                 isSensor: true,
@@ -589,10 +597,10 @@
             });
             World.add(world, sensors.goalTrigger);
 
-            // Collisions events handle karne ke liye listener lagayein
+            // Link listeners
             Events.on(engine, 'collisionStart', handleCollisions);
 
-            // Standard animation frame loop shuru karein
+            // Start standard 30 FPS animation request frame loop
             requestAnimationFrame(renderLoop);
         }
 
@@ -608,7 +616,7 @@
             currentRound = 1;
             currentSurvivors = [];
             currentEliminated = [];
-            matchDuration = 0; // clock reset karein
+            matchDuration = 0; // Reset clock
         }
 
         function startRound(roundNum) {
@@ -616,7 +624,7 @@
             const config = roundConfigs[currentRound - 1];
             currentSurvivors = [];
             
-            // Goalkeepers ke sizes ko pristine reset karein
+            // Re-instantiate goalkeeper sizes
             World.remove(world, [defenderSweeper, defenderJumper, defenderGoalie]);
             defenderSweeper = Bodies.rectangle(1365, 1810, 55, 180, { isStatic: true, label: 'defender' }); 
             defenderJumper = Bodies.rectangle(1825, 1230, 90, 240, { isStatic: true, label: 'defender' });  
@@ -626,15 +634,15 @@
             roundTimer = 0;
             isDefendersWindowOpen = false;
 
-            // Active balls ko saaf karein
+            // Wipe active spheres
             marbles.forEach(m => World.remove(world, m.body));
             marbles = [];
 
             const activeConts = countries.filter(c => c.status === 'racing');
 
-            // Spawning queue set karein
+            // Queue up spawning
             if (currentRound <= 4) {
-                // Deadlock se bachne ke liye protected countries ko priority dein
+                // Ensure protected countries spawn first to avoid deadlocks
                 spawnQueue = activeConts.sort((a, b) => {
                     const aProt = protectedCountries.includes(a.code) ? 1 : 0;
                     const bProt = protectedCountries.includes(b.code) ? 1 : 0;
@@ -646,16 +654,15 @@
 
             lastSpawnTime = 0;
 
-            // Manual runtime checks
             if (isHeadlessMode) {
-                // Headless automation counts immediately
+                // Instantly start in headless scenario without 3s buffer delay
                 overlayTimerActive = false;
                 overlayMode = '';
-                addLiveLog(`Round ${currentRound} Shuru Hua`, 'announcement');
+                addLiveLog(`Round ${currentRound} started`, 'announcement');
             } else {
-                // Canvas par transition countdown shuru karein
+                // Start automated canvas countdown
                 triggerCanvasOverlay('countdown', 3, () => {
-                    addLiveLog(`Round ${currentRound} Shuru Hua`, 'announcement');
+                    addLiveLog(`Round ${currentRound} started`, 'announcement');
                 });
             }
         }
@@ -676,7 +683,7 @@
                 } else {
                     overlayTimerActive = false;
                     if (overlayMode === 'countdown') playSound('goal');
-                    overlayMode = ''; // Naye telemetry rendering ko shuru karne ke liye reset karein
+                    overlayMode = ''; // Crucial reset so active match telemetry is allowed to render!
                     callback();
                 }
             }
@@ -687,9 +694,9 @@
             if (spawnQueue.length === 0) return;
 
             const country = spawnQueue.shift();
-            const radius = 45; // 4K resolution sphere radius
+            const radius = 45; // Scaled 4K sphere radius
             
-            // Top slope par drop location (Left shift: 175px)
+            // Drop on the top slope (Shifted left by 175px)
             const posX = 2905;
             const posY = 60;
 
@@ -721,14 +728,14 @@
                 if ((labelA === 'marble' && labelB === 'boot_spinner') || (labelA === 'boot_spinner' && labelB === 'marble')) {
                     const marbleBody = labelA === 'marble' ? pair.bodyA : pair.bodyB;
                     playSound('kick');
-                    // Gend ko tezi se right side propel karein
+                    // Propel ball dynamically to the right with faster velocities
                     Body.setVelocity(marbleBody, {
                         x: 58 + Math.random() * 20,
                         y: -24 - Math.random() * 14
                     });
                 }
 
-                // Peg bounces
+                // Bounce effects
                 if ((labelA === 'marble' && labelB === 'peg') || (labelA === 'peg' && labelB === 'marble')) {
                     const marbleBody = labelA === 'marble' ? pair.bodyA : pair.bodyB;
                     playSound('bounce');
@@ -739,11 +746,11 @@
                     playSound('fail');
                 }
 
-                // Pit gap me jaane par top queue me bhejein (respawn)
+                // Teleport on hitting pit gap
                 if (labelA === 'pit' && labelB === 'marble') respawnToTopQueue(pair.bodyB);
                 if (labelB === 'pit' && labelA === 'marble') respawnToTopQueue(pair.bodyA);
 
-                // Goal score hone par register karein
+                // Goal score
                 if (labelA === 'goal' && labelB === 'marble') handleScore(pair.bodyB);
                 if (labelB === 'goal' && labelA === 'marble') handleScore(pair.bodyA);
             });
@@ -771,7 +778,7 @@
                 return;
             }
 
-            // Scripted top-10 finalists rule lagayein
+            // Scripted top-10 finalists rule
             if (currentRound <= 4) {
                 const openSlots = config.targetSurvivors - currentSurvivors.length;
                 const remainingProtected = countries.filter(c => c.status === 'racing' && protectedCountries.includes(c.code) && !currentSurvivors.some(s => s.code === c.code));
@@ -782,13 +789,13 @@
                 }
             }
 
-            // Survivor add karein
+            // Register survivor
             currentSurvivors.push(country);
             country.status = 'survived';
             playSound('goal');
             
             if (overlayMode === '') {
-                addLiveLog(`${country.name} Surakshit Hua!`, 'goal');
+                addLiveLog(`${country.name} survived`, 'goal');
             }
 
             World.remove(world, body);
@@ -802,7 +809,7 @@
         function triggerRoundWrap() {
             const config = roundConfigs[currentRound - 1];
             
-            // Baki bache desh eliminate honge
+            // Eliminate remainder
             const failedList = countries.filter(c => c.status === 'racing' && !currentSurvivors.some(s => s.code === c.code));
 
             failedList.forEach(c => {
@@ -819,30 +826,32 @@
             playSound('fail');
 
             if (currentRound === 9) {
-                // Simulation aur recording dono ko turant rokein
+                // Stop the simulation loop and recording immediately
                 gameStarted = false;
                 isSimPaused = true;
                 
                 if (isRecording) {
-                    toggleRecording(); // WebM download trigger karein jab Champion mil jaye!
+                    toggleRecording(); // Stop and automatically trigger download/bridge stream on champion reveal!
                 }
 
-                // Champion screen ko hamesha ke liye show karein
-                triggerCanvasOverlay('champion', 99999, () => {});
+                // Show champion screen indefinitely (or very long 99999s) and enable manual restart
+                triggerCanvasOverlay('champion', 99999, () => {
+                    // Do nothing on timeout
+                });
 
-                // Start button ko "Restart Match" me badlein
+                // Re-enable Start button as "Restart Match"
                 const startBtn = document.getElementById('start-btn');
                 if (startBtn) {
                     startBtn.disabled = false;
                     startBtn.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg";
-                    document.getElementById('start-text').textContent = "Match Dobara Shuru Karein";
+                    document.getElementById('start-text').textContent = "Restart Match";
                 }
             } else {
                 if (isHeadlessMode) {
-                    // Automate immediate round switching for headlless stepping
+                    // Automate immediate round switching for real-time headless recording speedups
                     startRound(currentRound + 1);
                 } else {
-                    // Round summary ko 5 second dikhayein, phir agla round automatic chalayein
+                    // Show round results for 5 seconds, then advance automatically
                     triggerCanvasOverlay('round_summary', 5, () => {
                         startRound(currentRound + 1);
                     });
@@ -850,105 +859,37 @@
             }
         }
 
-        // MASTER EXPORT: Programmatic 1-Frame Deterministic Headless capture hook
-        window.stepFrame = function() {
-            const dt = 1 / 30; // Constant timestep logic
-
-            simTime += dt;
-            matchDuration += dt; 
-            roundTimer += dt; 
-
-            // Automate gendon ka release
-            if (spawnQueue.length > 0) {
-                lastSpawnTime += dt;
-                if (lastSpawnTime >= 0.35) {
-                    spawnNextMarble();
-                    lastSpawnTime = 0;
-                }
-            }
-
-            // Spinner mechanics update
-            bootAngle += 0.055;
-            Body.setAngle(bootSpinner, bootAngle);
-
-            // Defenders pattern synchronization wave
-            const cycleTime = simTime % 12;
-            let sweeperY, jumperY, goalieY;
-
-            if (cycleTime > 8) {
-                isDefendersWindowOpen = true;
-                sweeperY = 1950;
-                jumperY = 1350;
-                goalieY = 1920;
-            } else {
-                isDefendersWindowOpen = false;
-                sweeperY = 1750 + Math.sin(simTime * 1.5) * 150;
-                jumperY = 1680 + Math.sin(simTime * 1.5 - 1.2) * 255;
-                goalieY = 1720 + Math.sin(simTime * 1.5 - 2.4) * 200;
-            }
-
-            Body.setPosition(defenderSweeper, { x: defenderSweeper.position.x, y: sweeperY });
-            Body.setPosition(defenderJumper, { x: defenderJumper.position.x, y: jumperY });
-            Body.setPosition(defenderGoalie, { x: defenderGoalie.position.x, y: goalieY });
-
-            // Pure physical increments run (Zero integration lag!)
-            Engine.update(engine, dt * 1000);
-
-            // Ball positions sync & trails
-            marbles.forEach(m => {
-                m.country.trail.push({ x: m.body.position.x, y: m.body.position.y });
-                if (m.country.trail.length > 8) m.country.trail.shift();
-
-                const pos = m.body.position;
-                if (pos.y > 2220 || pos.x < 535 || pos.x > 2955) {
-                    respawnToTopQueue(m.body);
-                }
-                if (pos.x < 940 && pos.y > 1650 && Math.abs(m.body.velocity.x) < 0.05 && Math.abs(m.body.velocity.y) < 0.05) {
-                    Body.applyForce(m.body, pos, { x: 0.22, y: -0.22 });
-                }
-            });
-
-            // Refresh dashboards & HUDs
-            updateControlTimerWidget();
-            drawFrame();
-
-            // Web headless runtime data serialization return
-            return {
-                currentRound: currentRound,
-                matchDuration: matchDuration,
-                survivorCount: currentSurvivors.length,
-                totalMarbles: marbles.length,
-                isGameOver: (currentRound === 9 && isSimPaused)
-            };
-        };
-
-        // Standard 30 FPS Render loop physics stability ko barakarar rakhne ke liye
+        // Standard 30 FPS Render loop with real-time frame progression
         function renderLoop(timestamp) {
-            // Headless execution loops completely bypass standard browser requestAnimationFrame ticks
-            if (isHeadlessMode) return;
-
             requestAnimationFrame(renderLoop);
 
             if (!timestamp) timestamp = performance.now();
             if (!lastRenderTime) lastRenderTime = timestamp;
             const elapsed = timestamp - lastRenderTime;
 
-            // Frame throttling strictly 30 FPS par taaki system lag na ho
+            // Lock rendering exactly to 30 FPS to reduce CPU overhead
             if (elapsed >= fpsInterval) {
                 lastRenderTime = timestamp - (elapsed % fpsInterval);
 
+                // Run physics steps only if match has been started by user
                 if (!isSimPaused && gameStarted) {
-                    // Sim speed multipliers ko scale step me adapt karein
+                    // Headless automation speeds physics loop to complete game rapidly!
                     let steps = 1;
                     let dt = 0.0166;
                     
-                    if (simSpeed === 1) { steps = 2; dt = 0.0166; }
-                    else if (simSpeed === 10) { steps = 10; dt = 0.0166; }
-                    else if (simSpeed === 20) { steps = 10; dt = 0.0166 * 2; }
-                    else if (simSpeed === 30) { steps = 10; dt = 0.0166 * 3; }
-                    else if (simSpeed === 40) { steps = 10; dt = 0.0166 * 4; }
-                    else if (simSpeed === 50) { steps = 10; dt = 0.0166 * 5; }
-                    else if (simSpeed === 100) { steps = 10; dt = 0.0166 * 10; }
+                    if (isHeadlessMode) {
+                        // Accelerate timeline steps slightly to save Actions execution minutes
+                        steps = 5; 
+                        dt = 0.0166;
+                    } else {
+                        if (simSpeed === 1) { steps = 2; dt = 0.0166; }
+                        else if (simSpeed === 10) { steps = 10; dt = 0.0166; }
+                        else if (simSpeed === 20) { steps = 10; dt = 0.0166 * 2; }
+                        else if (simSpeed === 30) { steps = 10; dt = 0.0166 * 3; }
+                        else if (simSpeed === 40) { steps = 10; dt = 0.0166 * 4; }
+                        else if (simSpeed === 50) { steps = 10; dt = 0.0166 * 5; }
+                        else if (simSpeed === 100) { steps = 10; dt = 0.0166 * 10; }
+                    }
 
                     const speedStep = dt * 1000;
 
@@ -957,7 +898,6 @@
                         matchDuration += dt; 
                         roundTimer += dt; 
 
-                        // Tezi se ball release karne ka auto-interval limit
                         if (spawnQueue.length > 0) {
                             lastSpawnTime += dt;
                             if (lastSpawnTime >= 0.35) {
@@ -966,11 +906,11 @@
                             }
                         }
 
-                        // Spinner kicker arms ko rotate karein
+                        // Spin boot arms
                         bootAngle += 0.055;
                         Body.setAngle(bootSpinner, bootAngle);
 
-                        // ⚡ RHYTHMIC TACTICAL WAVE & DEFENSE BREAKDOWNS ⚡
+                        // 12-Second Defensive cycle loops indefinitely
                         const cycleTime = simTime % 12;
                         let sweeperY, jumperY, goalieY;
 
@@ -992,19 +932,16 @@
 
                         Engine.update(engine, speedStep);
 
-                        // Gendon ke visual trails track karein
                         marbles.forEach(m => {
                             m.country.trail.push({ x: m.body.position.x, y: m.body.position.y });
                             if (m.country.trail.length > 8) m.country.trail.shift();
 
                             const pos = m.body.position;
 
-                            // Offscreen girne par dobara top par recirculate karein
                             if (pos.y > 2220 || pos.x < 535 || pos.x > 2955) {
                                 respawnToTopQueue(m.body);
                             }
 
-                            // Fasi hui gendon ko push karne ke liye force apply karein
                             if (pos.x < 940 && pos.y > 1650 && Math.abs(m.body.velocity.x) < 0.05 && Math.abs(m.body.velocity.y) < 0.05) {
                                 Body.applyForce(m.body, pos, { x: 0.22, y: -0.22 });
                             }
@@ -1012,10 +949,7 @@
                     }
                 }
 
-                // Control Timer Widget update karein
                 updateControlTimerWidget();
-
-                // Canvas viewport par interactive layers draw karein
                 drawFrame();
             }
         }
@@ -1033,32 +967,31 @@
         }
 
         function drawFrame() {
-            // Dynamic scale dimension check clear operation ke liye
             ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 
-            // Matrix context stack scaling projection apply karein
+            // Matrix scale transformation context wrapper
             ctx.save();
             ctx.scale(renderScale, renderScale);
 
-            // Black arena background (Standard coordinates are strictly 3840 x 2160)
+            // Arena base fill
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, 3840, 2160);
 
-            // Left Sidebar background (Live Telemetry / Commentary)
+            // Left Sidebar background (Live Commentary HUD)
             ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
             ctx.fillRect(0, 0, 525, 2160);
             ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 10;
             ctx.strokeRect(0, 0, 525, 2160);
 
-            // Right Sidebar background (Standings / Leaderboard)
+            // Right Sidebar background (Leaderboard Standings HUD)
             ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
             ctx.fillRect(2965, 0, 875, 2160);
             ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 10;
             ctx.strokeRect(2965, 0, 875, 2160);
 
-            // Static boundaries draw karein
+            // 1. Draw static boundaries & plinko circle nodes inside shifted game bounds (x: 535 to 2955)
             const bodies = Composite.allBodies(world);
             bodies.forEach(b => {
                 if (b.isSensor) return;
@@ -1085,7 +1018,7 @@
                 ctx.restore();
             });
 
-            // Boot Spinner draw karein
+            // 2. Draw Boot Spinner kicker
             ctx.save();
             ctx.translate(bootSpinner.position.x, bootSpinner.position.y);
             ctx.rotate(bootSpinner.angle);
@@ -1104,10 +1037,10 @@
             drawBlueBoot(ctx, 0, -spokeSize, -Math.PI / 2); 
             ctx.restore();
 
-            // Spinner chamber ke niche rounding fillets
+            // Draw Left and Right Rounded Arc Fillets in the spinner chamber (Radius matching R = 50)
             ctx.save();
             ctx.fillStyle = '#1e293b';
-            // Left Rounded Corner
+            // Left Rounded Corner Fillet
             ctx.beginPath();
             ctx.moveTo(535, 2095);
             ctx.lineTo(535, 2045);
@@ -1115,7 +1048,7 @@
             ctx.closePath();
             ctx.fill();
 
-            // Right Rounded Corner
+            // Right Rounded Corner Fillet
             ctx.beginPath();
             ctx.moveTo(940, 2095);
             ctx.lineTo(940, 2045);
@@ -1124,12 +1057,12 @@
             ctx.fill();
             ctx.restore();
 
-            // Goalkeepers draw karein
-            drawFootballerCharacter(ctx, defenderSweeper, '#10b981', '#047857'); // Sweeper - Hara
-            drawFootballerCharacter(ctx, defenderJumper, '#2563eb', '#1e40af');  // Jumper - Neela
+            // 3. Draw Goalkeepers
+            drawFootballerCharacter(ctx, defenderSweeper, '#10b981', '#047857'); // Sweeper - Green
+            drawFootballerCharacter(ctx, defenderJumper, '#2563eb', '#1e40af');  // Jumper - Blue
             drawFootballerCharacter(ctx, defenderGoalie, '#a855f7', '#7e22ce');  // Goalie - Purple
 
-            // Tall Goalposts net structured lines
+            // 4. Tall Goalpost structures shifted inside play zone
             ctx.save();
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 12;
@@ -1145,12 +1078,12 @@
             }
             ctx.restore();
 
-            // Grass floors (Green pitches)
+            // 5. Grass floors
             ctx.fillStyle = '#22c55e';
             ctx.fillRect(940, 2095, 894, 65); 
             ctx.fillRect(2325, 2095, 630, 65); 
 
-            // Active trails draw karein
+            // 6. Draw active trails
             ctx.save();
             marbles.forEach(m => {
                 m.country.trail.forEach((pos, idx) => {
@@ -1164,13 +1097,13 @@
             });
             ctx.restore();
 
-            // Spheres flags optimize draw
+            // 7. Active country spheres using GPU-optimized caching system
             marbles.forEach(m => {
                 const pos = m.body.position;
                 drawCountryFlag(ctx, pos.x, pos.y, m.body.circleRadius, m.country);
             });
 
-            // Survivors HUD box on top center
+            // 8. Widescreen survivors container HUD
             ctx.save();
             ctx.fillStyle = '#000000';
             ctx.strokeStyle = '#1e293b';
@@ -1181,7 +1114,7 @@
             ctx.fillStyle = '#22c55e';
             ctx.font = '900 48px Roboto, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('Bachne Wale (Survivors)', 1745, 95);
+            ctx.fillText('Survivors', 1745, 95);
 
             currentSurvivors.forEach((c, idx) => {
                 const col = idx % 20; 
@@ -1196,19 +1129,18 @@
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 52px Roboto, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(`Bache Hue Spots: ${leftSpots}`, 1745, 410);
+            ctx.fillText(`Spots left: ${leftSpots}`, 1745, 410);
 
-            // Defensive Gap breakdown warning sign
             if (isDefendersWindowOpen) {
                 let blinkAlpha = 0.5 + Math.sin(Date.now() * 0.015) * 0.45;
-                ctx.fillStyle = `rgba(239, 68, 68, ${blinkAlpha})`; 
+                ctx.fillStyle = `rgba(239, 68, 68, ${blinkAlpha})`; // Blinking Red
                 ctx.font = '900 40px Share Tech Mono, monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText(`⚡ DEFENSE TOOT GAYA: GOAL KA RASTA KHULA HAI ⚡`, 1745, 480);
+                ctx.fillText(`⚡ DEFENSE BREAKDOWN: GOAL WINDOW OPEN ⚡`, 1745, 480);
             }
             ctx.restore();
 
-            // Left Sidebar: Live Commentary Telemetry
+            // 9. Draw Left Commentary Live Logs directly on canvas
             ctx.save();
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 42px Roboto, sans-serif';
@@ -1218,17 +1150,17 @@
             ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(50, 130); ctx.lineTo(475, 130); ctx.stroke();
 
-            // Target requirements box in sidebar
+            // Dynamic Target HUD Block inside the Commentary panel
             const currentConfig = roundConfigs[currentRound - 1];
             const startC = currentConfig.startCount;
             const targetC = currentConfig.targetSurvivors;
             const elimC = startC - targetC;
-            ctx.fillStyle = '#fbbf24'; 
+            ctx.fillStyle = '#fbbf24'; // amber-400
             ctx.font = '900 40px Share Tech Mono, monospace';
             ctx.textAlign = 'center';
-            ctx.fillText(`LAKSHY: ${startC} ➔ ${targetC} SURAKSHIT`, 262, 185);
+            ctx.fillText(`TARGET: ${startC} ➔ ${targetC} SAFE`, 262, 185);
             ctx.font = '700 32px Share Tech Mono, monospace';
-            ctx.fillText(`(OUT HONE WALE: ${elimC} DESH)`, 262, 230);
+            ctx.fillText(`(ELIMINATING ${elimC} COUNTRIES)`, 262, 230);
 
             ctx.font = '600 30px Share Tech Mono, monospace';
             ctx.textAlign = 'left';
@@ -1238,12 +1170,12 @@
             });
             ctx.restore();
 
-            // Right Sidebar: Live Standings (Desh ki ratings)
+            // 10. Draw standings on Right Sidebar
             ctx.save();
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 42px Roboto, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('STANDINGS (DESH)', 3402, 95);
+            ctx.fillText('STANDINGS', 3402, 95);
             ctx.strokeStyle = '#10b981';
             ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(3015, 130); ctx.lineTo(3790, 130); ctx.stroke();
@@ -1254,14 +1186,14 @@
                 const row = idx % 25;
                 const ly = 210 + (row * 76);
 
-                let badgeColor = '#94a3b8'; 
-                let statusLabel = 'RACE MEIN';
+                let badgeColor = '#94a3b8'; // slate-400
+                let statusLabel = 'RACING';
                 if (c.status === 'eliminated') {
-                    badgeColor = '#f87171'; 
+                    badgeColor = '#f87171'; // rose-400
                     statusLabel = `OUT R${c.eliminatedRound}`;
                 } else if (currentSurvivors.some(s => s.code === c.code)) {
-                    badgeColor = '#34d399'; 
-                    statusLabel = 'SURAKSHIT';
+                    badgeColor = '#34d399'; // emerald-400
+                    statusLabel = 'SAFE';
                 }
 
                 let fx, nx, sx; 
@@ -1289,12 +1221,11 @@
             });
             ctx.restore();
 
-            // Overlay transitions render karein
+            // 11. Render automated canvas transitions
             if (overlayTimerActive) {
                 renderOverlayScreen();
             }
 
-            // Pop scaling restore context
             ctx.restore();
         }
 
@@ -1311,17 +1242,17 @@
 
                 ctx.fillStyle = '#94a3b8';
                 ctx.font = '700 48px Roboto, sans-serif';
-                ctx.fillText(`ROUND ${currentRound} JALD SHURU HOGA`, 1745, 1150);
+                ctx.fillText(`ROUND ${currentRound} STARTING SOON`, 1745, 1150);
             } else if (overlayMode === 'round_summary') {
                 ctx.fillStyle = '#ffffff';
                 ctx.font = '900 85px Roboto, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(`ROUND ${currentRound} PURA HUA!`, 1745, 230); 
+                ctx.fillText(`ROUND ${currentRound} COMPLETE!`, 1745, 230); 
 
                 ctx.fillStyle = '#34d399';
                 ctx.font = '900 48px Roboto, sans-serif';
                 ctx.textAlign = 'left';
-                ctx.fillText(`SURAKSHIT (${currentSurvivors.length})`, 675, 385);
+                ctx.fillText(`SAFE (${currentSurvivors.length})`, 675, 385);
 
                 currentSurvivors.forEach((c, idx) => {
                     const col = idx % 10;
@@ -1334,7 +1265,7 @@
                 ctx.fillStyle = '#f87171';
                 ctx.font = '900 48px Roboto, sans-serif';
                 ctx.textAlign = 'left';
-                ctx.fillText(`BAHAR HUYE (ELIMINATED) (${currentEliminated.length})`, 675, 1065);
+                ctx.fillText(`OUT (${currentEliminated.length})`, 675, 1065);
 
                 currentEliminated.forEach((c, idx) => {
                     const col = idx % 10;
@@ -1347,12 +1278,12 @@
                 ctx.fillStyle = '#fbbf24';
                 ctx.font = '700 48px Share Tech Mono, monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText(`Agla round ${overlayTimeLeft}s mein shuru hoga...`, 1745, 1950);
+                ctx.fillText(`Next round begins in ${overlayTimeLeft}s...`, 1745, 1950);
             } else if (overlayMode === 'champion') {
                 ctx.fillStyle = '#fbbf24';
                 ctx.font = '900 120px Roboto, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('👑 VIJETA / CHAMPION 👑', 1745, 450);
+                ctx.fillText('👑 CHAMPION 👑', 1745, 450);
 
                 const winner = currentSurvivors[0];
                 drawCountryFlag(ctx, 1745, 900, 250, winner);
@@ -1363,13 +1294,13 @@
 
                 ctx.fillStyle = '#94a3b8';
                 ctx.font = '700 48px Share Tech Mono, monospace';
-                ctx.fillText(`Tournament Khatam! Dobara khelne ke liye upar 'Match Dobara Shuru Karein' par click karein.`, 1745, 1650);
+                ctx.fillText(`Tournament Finished! Click 'Restart Match' above to play again.`, 1745, 1650);
             }
 
             ctx.restore();
         }
 
-        // Blade arms rotate properties
+        // Draw boot spinner with smaller blade diameter (115px)
         function drawBlueBoot(c, x, y, angle) {
             c.save();
             c.translate(x, y);
@@ -1387,7 +1318,7 @@
             c.restore();
         }
 
-        // Footballers model proportional drawing structure
+        // Complete proportional drawing engine - legs/feet never clip below bounding box!
         function drawFootballerCharacter(ctx, body, shirtCol, pantsCol) {
             const pos = body.position;
             const w = body.bounds.max.x - body.bounds.min.x;
@@ -1396,7 +1327,7 @@
             ctx.save();
             ctx.translate(pos.x, pos.y);
 
-            // Sir (Head)
+            // Head: top 20% of height
             const headRadius = h * 0.10;
             const headY = -h/2 + headRadius;
             ctx.fillStyle = '#d1a080'; 
@@ -1404,13 +1335,13 @@
             ctx.arc(0, headY, headRadius, 0, Math.PI * 2);
             ctx.fill();
 
-            // Baal (Hair)
+            // Hair: top 12%
             ctx.fillStyle = '#2d1a0a';
             ctx.beginPath();
             ctx.arc(0, headY - h*0.03, headRadius * 1.1, Math.PI, 0);
             ctx.fill();
 
-            // Haath (Arms)
+            // Arms: relative to jersey torso
             ctx.strokeStyle = '#d1a080';
             ctx.lineWidth = w * 0.18;
             ctx.lineCap = 'round';
@@ -1421,21 +1352,21 @@
             ctx.lineTo(w/2 + w*0.2, -h/2 + h*0.1);
             ctx.stroke();
 
-            // Jersey Shirt (Torso)
+            // Jersey (Shirt): 20% to 56% of height (height: 36%)
             ctx.fillStyle = shirtCol;
             ctx.fillRect(-w/2, -h/2 + h*0.20, w, h*0.36);
 
-            // Shorts (Pants)
+            // Shorts (Pants): 56% to 71% of height (height: 15%)
             ctx.fillStyle = pantsCol;
             ctx.fillRect(-w/2, -h/2 + h*0.56, w, h*0.15);
 
-            // Pair (Legs)
+            // Legs: 71% to 88% of height (height: 17%)
             ctx.fillStyle = '#d1a080';
             const legWidth = w * 0.28;
             ctx.fillRect(-w * 0.35, -h/2 + h*0.71, legWidth, h*0.17);
             ctx.fillRect(w * 0.35 - legWidth, -h/2 + h*0.71, legWidth, h*0.17);
 
-            // Cleats (Shoes)
+            // Cleats (Shoes): 88% to 100% of height (height: 12%). Ends exactly at h/2.
             ctx.fillStyle = '#3b82f6';
             ctx.fillRect(-w * 0.42, -h/2 + h*0.88, w * 0.36, h*0.12);
             ctx.fillRect(w * 0.42 - w * 0.36, -h/2 + h*0.88, w * 0.36, h*0.12);
@@ -1443,37 +1374,39 @@
             ctx.restore();
         }
 
-        // Flags render optimization
+        // GPU-Accelerated Pre-Rendered Flag Draw Function
         function drawCountryFlag(ctxCanvas, x, y, r, country) {
             const cachedFlag = flagCache[country.code];
             if (cachedFlag) {
+                // High-performance hardware accelerated blit operation
                 ctxCanvas.drawImage(cachedFlag, x - r, y - r, r * 2, r * 2);
             } else {
+                // Secure fallback
                 ctxCanvas.fillStyle = country.colors[0];
                 ctxCanvas.beginPath(); ctxCanvas.arc(x, y, r, 0, Math.PI * 2); ctxCanvas.fill();
             }
         }
 
-        // BROWSER RECORDING ENGINE: HD 4K Video aur High-quality Audio dono record karta hai
+        // SUPREME BROWSER RECORDING ENGINE: Records Both HD 4K Video + High-quality Audio
         function toggleRecording() {
             const btn = document.getElementById('record-btn');
             const txt = document.getElementById('record-text');
 
             if (!isRecording) {
-                // Agar simulation start nahi hai, to shuru karein
+                // Automatically start match simulation upon record trigger if not already active
                 if (!gameStarted) {
                     startGameManual();
                 }
 
-                // Audio track sync initialize karein
+                // Ensure audio routing is safely initialized
                 initAudio();
                 recordedChunks = [];
                 
-                // Canvas stream capture karein at 30 fps
+                // 1. Capture pristine 4K 30fps Video Track directly from canvas
                 const canvasStream = mainCanvas.captureStream(30); 
                 const videoTrack = canvasStream.getVideoTracks()[0];
                 
-                // Synthesized audio tracks add karein
+                // 2. Mix with Synthesized Audio Track
                 let combinedStream;
                 if (audioDestination && audioDestination.stream.getAudioTracks().length > 0) {
                     const audioTrack = audioDestination.stream.getAudioTracks()[0];
@@ -1482,7 +1415,7 @@
                     combinedStream = canvasStream;
                 }
 
-                // Smooth high-fidelity WebM codec setup
+                // Bitrate optimized for smooth 4K capturing (12 Mbps)
                 let options = { mimeType: 'video/webm;codecs=vp8', videoBitsPerSecond: 12000000 }; 
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) {
                     options = { mimeType: 'video/webm' };
@@ -1497,27 +1430,44 @@
                     mediaRecorder.start();
 
                     isRecording = true;
-                    btn.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg animate-pulse";
-                    txt.textContent = "Recording Chalu (Rokne Ke Liye Click Karein)";
+                    if (btn && txt) {
+                        btn.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg animate-pulse";
+                        txt.textContent = "Recording (Click to stop)";
+                    }
                     
-                    // Recording shuru hote hi background music on karein
+                    // Automatically trigger BGM on record click to keep music sync!
                     const player = document.getElementById('bgm-player');
                     if (player && player.paused) {
                         toggleBGM();
                     }
                 } catch (err) {
-                    console.error("Recording start karne me issue hua:", err);
+                    console.error("Recording initialization failed:", err);
                 }
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
-                btn.className = "px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg";
-                txt.textContent = "Browser Record (Audio Ke Sath)";
+                if (btn && txt) {
+                    btn.className = "px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg";
+                    txt.textContent = "Browser Record (With Audio)";
+                }
             }
         }
 
         function saveRecording() {
             const blob = new Blob(recordedChunks, { type: 'video/webm' });
+
+            // If exposed Node.js bridge exists (GitHub Actions automated environment)
+            if (window.saveVideoChunkToDisk) {
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = function() {
+                    const base64data = reader.result.split(',')[1];
+                    window.saveVideoChunkToDisk(base64data);
+                };
+                return;
+            }
+
+            // Fallback for standard manual local downloads
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             document.body.appendChild(a);

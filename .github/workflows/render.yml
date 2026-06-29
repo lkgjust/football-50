@@ -1,42 +1,33 @@
-name: Beat the Keeper 4K Upscale Renderer
+name: Beat the Keeper 4K Rendereron:workflow_dispatch: # Actions tab me button trigger karne ke liye manual dispatchjobs:render-video:runs-on: ubuntu-lateststeps:
+- name: Checkout Workspace Code Repository
+  uses: actions/checkout@v4
 
-on:
-  workflow_dispatch: # GitHub UI me manual click karke video render karne ke liye button!
+- name: Setup Node.js Runtime Environment
+  uses: actions/setup-node@v4
+  with:
+    node-version: 18
 
-jobs:
-  render-video:
-    runs-on: ubuntu-latest
+- name: Install System Dependencies & FFmpeg Encoder
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y ffmpeg
 
-    steps:
-    - name: Checkout Workspace Code Repository
-      uses: actions/checkout@v4
+- name: Install Project Dependencies (Playwright)
+  run: |
+    npm init -y
+    npm install playwright
 
-    - name: Setup Node.js Runtime Environment
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
+- name: Install Playwright Chromium Drivers
+  run: |
+    npx playwright install chromium --with-deps
 
-    - name: Install System Dependencies & FFmpeg Encoder
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+- name: Execute Automated Real-Time Browser-Side Recording Engine
+  run: |
+    node render.js
 
-    - name: Install Project Dependencies (Playwright)
-      run: |
-        npm init -y
-        npm install playwright
-
-    - name: Install Playwright Chromium Drivers
-      run: |
-        npx playwright install chromium --with-deps
-
-    - name: Execute Automated 1080p Deterministic Rendering Core
-      run: |
-        node render.js
-
-    - name: Upload Upscaled Pristine 4K MP4 Video to Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: beat-the-keeper-4k-upscaled-video
-        path: beat_the_keeper_4k_lanczos.mp4
-        if-no-files-found: error
+- name: Upload Perfect 4K MP4 Video to Artifacts
+  uses: actions/upload-artifact@v4
+  with:
+    name: beat-the-keeper-4k-recording
+    path: beat_the_keeper_4k.mp4
+    if-no-files-found: error

@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat the Keeper - 4K Ultra HD Recording Studio</title>
+    <!-- High-quality layout styling ke liye Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Matter.js 2D physics engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    
+    <style>
+        body, canvas {
+            font-family: 'Roboto', sans-serif !important;
+        }
+        .mono-font {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        /* Clean look ke liye custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden select-none">
+
+    <!-- EXTERNAL HEADER: Controls aur recording widgets (Recording screen se bahar rakha gaya hai) -->
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center shadow-lg animate-pulse">
+                <i class="fa-solid fa-video text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-black tracking-tight text-white flex items-center gap-2">
+                    BEAT THE KEEPER <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">4K ULTRA HD SIMULATOR EDITION</span>
+                </h1>
+                <p class="text-[11px] text-slate-400">Commentary, game arena, aur standings canvas ke andar integrated hain seamless 4K recording ke liye.</p>
+            </div>
+        </div>
+        
+        <!-- Simulation HUD aur Controls -->
+        <div class="flex items-center space-x-4">
+            <!-- Dynamic Timer Clock -->
+            <div class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                <i class="fa-regular fa-clock text-blue-400"></i>
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Bita Hua Samay:</span>
+                <span id="session-timer" class="mono-font text-sm font-bold text-emerald-400 tracking-wider">00:00:00</span>
+            </div>
+
+            <!-- Creator's Lag-free Recording Guide -->
+            <div class="bg-amber-950/40 border border-amber-500/30 px-3.5 py-1.5 rounded-lg flex items-center space-x-2">
+                <i class="fa-solid fa-circle-info text-amber-400 text-sm"></i>
+                <span class="text-[11px] text-amber-300 font-semibold">0% Lag Record Ke Liye: <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700">Win + Alt + R</kbd> (Xbox Bar) ya OBS</span>
+            </div>
+
+            <!-- Start Match Controller Button -->
+            <button id="start-btn" onclick="startGameManual()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
+                <i class="fa-solid fa-play"></i>
+                <span id="start-text">Match Shuru Karein</span>
+            </button>
+
+            <!-- Video Recording Controller (4K Audio + Video dono record karta hai) -->
+            <button id="record-btn" onclick="toggleRecording()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+                <span id="record-text">Browser Record (Audio ke sath)</span>
+            </button>
+
+            <!-- Background Music Player -->
+            <div class="bg-slate-850 px-3 py-1.5 rounded-lg flex items-center space-x-3 border border-slate-750">
+                <audio id="bgm-player" loop src="Beat the Keeper - 50 Country Elimination Marble Race.m4a"></audio>
+                <button onclick="toggleBGM()" id="bgm-btn" class="px-2.5 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1">
+                    <i class="fa-solid fa-play"></i> Music Chalayein
+                </button>
+            </div>
+
+            <!-- Simulation Speed Modifiers (1x se 100x tak adjust karein) -->
+            <div class="bg-slate-800 px-3 py-1 rounded-lg flex items-center space-x-2 border border-slate-700">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gati (Speed):</span>
+                <div class="flex space-x-1" id="speed-controls">
+                    <button onclick="setSimSpeed(1)" id="speed-1x" class="px-2 py-0.5 rounded text-xs font-bold bg-blue-600 text-white transition">1x</button>
+                    <button onclick="setSimSpeed(10)" id="speed-10x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">10x</button>
+                    <button onclick="setSimSpeed(20)" id="speed-20x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">20x</button>
+                    <button onclick="setSimSpeed(30)" id="speed-30x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">30x</button>
+                    <button onclick="setSimSpeed(40)" id="speed-40x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">40x</button>
+                    <button onclick="setSimSpeed(50)" id="speed-50x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">50x</button>
+                    <button onclick="setSimSpeed(100)" id="speed-100x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">100x</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN RECORDING FRAMEWORK ZONE -->
+    <main class="flex-1 bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <!-- Aspect Ratio box container responsive scaling ke liye -->
+        <div class="relative w-full max-w-[1500px] aspect-[16/9] bg-black border border-slate-850 rounded-2xl overflow-hidden shadow-2xl">
+            <!-- Widescreen 3840 x 2160 rendering canvas pristine 4K quality ke liye -->
+            <canvas id="physics-canvas" width="3840" height="2160" class="w-full h-full block bg-black"></canvas>
+        </div>
+    </main>
+
+    <script>
+        const { Engine, World, Bodies, Body, Composite, Events, Vector } = Matter;
+        let engine;
+        let world;
+        let mainCanvas;
+        let ctx;
+        
+        let simSpeed = 1;
+        let isSimPaused = false;
+        let gameStarted = false; // Jab tak start ya record button na daba ho, autoplay ko rokta hai
+        let simTime = 0;
+        let matchDuration = 0; // Simulated timer
+        let renderScale = 1.0; // Dynamic scale: 1.0 = 4K rendering, 0.5 = 1080p superfast headless render
+
+        // 30 FPS throttling state variables globally declare kiye hain taaki ReferenceErrors na ho
+        let lastRenderTime = 0;
+        const fpsInterval = 1000 / 30; // ~33.33ms target frame interval
+
+        // Headless execution state check
+        const urlParams = new URLSearchParams(window.location.search);
+        const isHeadlessMode = urlParams.get('headless') === 'true';
+
+        // 9-Round Structured Elimination Progression
+        let currentRound = 1;
+        const roundConfigs = [
+            { id: 1, startCount: 50, targetSurvivors: 40, label: "Round 1 (50 se 40)" },
+            { id: 2, startCount: 40, targetSurvivors: 30, label: "Round 2 (40 se 30)" },
+            { id: 3, startCount: 30, targetSurvivors: 20, label: "Round 3 (30 se 20)" },
+            { id: 4, startCount: 20, targetSurvivors: 10, label: "Round 4 (20 se 10)" },
+            { id: 5, startCount: 10, targetSurvivors: 8, label: "Round 5 (10 se 8)" },
+            { id: 6, startCount: 8, targetSurvivors: 6, label: "Round 6 (8 se 6)" },
+            { id: 7, startCount: 6, targetSurvivors: 4, label: "Round 7 (6 se 4)" },
+            { id: 8, startCount: 4, targetSurvivors: 2, label: "Semifinal (4 se 2)" },
+            { id: 9, startCount: 2, targetSurvivors: 1, label: "Grand Finale (2 se 1)" }
+        ];
+
+        // Spawning queue properties
+        let spawnQueue = [];
+        let lastSpawnTime = 0;
+
+        let countries = [];
+        let marbles = []; // Active sphere objects
+        let currentSurvivors = [];
+        let currentEliminated = [];
+
+        // Game components
+        let bootSpinner = null;
+        let defenderSweeper = null;
+        let defenderJumper = null;
+        let defenderGoalie = null;
+        let bootAngle = 0;
+
+        let sensors = {};
+        
+        // Media Recorder State variables
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecording = false;
+
+        // Custom scripted override lists (Protected countries jo Round 5 tak surakshit rahenge)
+        const protectedCountries = ["FR", "AR", "ES", "GB", "BR", "NL", "PT", "MX", "BE", "US"];
+
+        // Live telemetry logs jo canvas par dikhenge
+        let liveLogs = [];
+
+        // Automation overlay counters
+        let overlayTimerActive = false;
+        let overlayTimeLeft = 0;
+        let overlayMode = ''; // 'countdown', 'round_summary', 'champion'
+
+        // Sound Synthesis API
+        let audioCtx = null;
+        let audioDestination = null;
+        let bgmSource = null;
+        let soundEnabled = true;
+
+        // Offscreen canvas cache country flags ke liye (CPU/GPU overhead kam karne ke liye)
+        const flagCache = {};
+
+        // Speed optimization: Sync pattern cycles
+        let roundTimer = 0; 
+        let currentScale = 1.0; 
+        let isDefendersWindowOpen = false; // Kya defense ke beech ka rasta khula hai
+
+        // Pure 50 desh ka dataset
+        const countriesData = [
+            { name: "Argentina", code: "AR", colors: ["#74ACDF", "#FFFFFF", "#F6B426"] },
+            { name: "Australia", code: "AU", colors: ["#00008B", "#FF0000", "#FFFFFF"] },
+            { name: "Austria", code: "AT", colors: ["#ED2939", "#FFFFFF", "#ED2939"] },
+            { name: "Belgium", code: "BE", colors: ["#000000", "#FDE100", "#EB2D3F"] },
+            { name: "Brazil", code: "BR", colors: ["#009739", "#FEDF00", "#002776"] },
+            { name: "Canada", code: "CA", colors: ["#FF0000", "#FFFFFF", "#FF0000"] },
+            { name: "Chile", code: "CL", colors: ["#00209F", "#FFFFFF", "#D52B1E"] },
+            { name: "China", code: "CN", colors: ["#DE2910", "#FFDE00", "#DE2910"] },
+            { name: "Colombia", code: "CO", colors: ["#FCD116", "#003893", "#CE1126"] },
+            { name: "Croatia", code: "HR", colors: ["#FF0000", "#FFFFFF", "#171796"] },
+            { name: "Denmark", code: "DK", colors: ["#C60C30", "#FFFFFF", "#C60C30"] },
+            { name: "Egypt", code: "EG", colors: ["#C1272D", "#FFFFFF", "#000000"] },
+            { name: "Finland", code: "FI", colors: ["#FFFFFF", "#002F6C", "#FFFFFF"] },
+            { name: "France", code: "FR", colors: ["#00209F", "#FFFFFF", "#F81A2D"] },
+            { name: "Germany", code: "DE", colors: ["#000000", "#FF0000", "#FFCC00"] },
+            { name: "Greece", code: "GR", colors: ["#005BA6", "#FFFFFF", "#005BA6"] },
+            { name: "Iceland", code: "IS", colors: ["#003897", "#D7282F", "#FFFFFF"] },
+            { name: "India", code: "IN", colors: ["#FF9933", "#FFFFFF", "#138808"] },
+            { name: "Indonesia", code: "ID", colors: ["#FF0000", "#FFFFFF", "#FF0000"] },
+            { name: "Ireland", code: "IE", colors: ["#169B62", "#FFFFFF", "#FF883E"] },
+            { name: "Italy", code: "IT", colors: ["#009246", "#FFFFFF", "#CE2B37"] },
+            { name: "Jamaica", code: "JM", colors: ["#FED100", "#009B3A", "#000000"] },
+            { name: "Japan", code: "JP", colors: ["#FFFFFF", "#BC002D", "#FFFFFF"] },
+            { name: "Kenya", code: "KE", colors: ["#000000", "#BB0000", "#006600"] },
+            { name: "Mexico", code: "MX", colors: ["#006847", "#FFFFFF", "#CE1126"] },
+            { name: "Morocco", code: "MA", colors: ["#C1272D", "#006233", "#C1272D"] },
+            { name: "Netherlands", code: "NL", colors: ["#AE1C28", "#FFFFFF", "#21468B"] },
+            { name: "New Zealand", "code": "NZ", colors: ["#00008B", "#FF0000", "#FFFFFF"] },
+            { name: "Nigeria", code: "NG", colors: ["#008751", "#FFFFFF", "#008751"] },
+            { name: "Norway", "code": "NO", "colors": ["#EF2B2D", "#00205B", "#FFFFFF"] },
+            { name: "Pakistan", "code": "PK", "colors": ["#00401A", "#FFFFFF", "#00401A"] },
+            { name: "Peru", "code": "PE", "colors": ["#D91414", "#FFFFFF", "#D91414"] },
+            { name: "Philippines", "code": "PH", "colors": ["#0038A8", "#CE1126", "#FFFFFF"] },
+            { name: "Poland", "code": "PL", "colors": ["#FFFFFF", "#DC143C", "#FFFFFF"] },
+            { name: "Portugal", "code": "PT", "colors": ["#046A38", "#DA291C", "#DA291C"] },
+            { name: "Romania", "code": "RO", "colors": ["#002B7F", "#FCD116", "#CE1126"] },
+            { name: "Russia", "code": "RU", "colors": ["#FFFFFF", "#0039A6", "#D52B1E"] },
+            { name: "Saudi Arabia", "code": "SA", "colors": ["#006C35", "#FFFFFF", "#006C35"] },
+            { name: "South Africa", "code": "ZA", "colors": ["#E03C31", "#007A4D", "#002395"] },
+            { name: "South Korea", "code": "KR", "colors": ["#FFFFFF", "#CD2E3A", "#0F4C81"] },
+            { name: "Spain", "code": "ES", "colors": ["#C11B17", "#FCD116", "#C11B17"] },
+            { name: "Sweden", "code": "SE", "colors": ["#006AA7", "#FECC00", "#006AA7"] },
+            { name: "Switzerland", "code": "CH", "colors": ["#D52B1E", "#FFFFFF", "#D52B1E"] },
+            { name: "Thailand", "code": "TH", "colors": ["#A51931", "#F4F5F7", "#2D2A4A"] },
+            { name: "Turkey", "code": "TR", "colors": ["#E30A17", "#FFFFFF", "#E30A17"] },
+            { name: "Ukraine", "code": "UA", "colors": ["#0057B7", "#FFD700", "#0057B7"] },
+            { name: "United Kingdom", "code": "GB", "colors": ["#00247D", "#CF142B", "#FFFFFF"] },
+            { name: "United States", "code": "US", "colors": ["#3C3B6E", "#B22234", "#FFFFFF"] },
+            { name: "Uruguay", "code": "UY", "colors": ["#0038A8", "#FFFFFF", "#FCD116"] },
+            { name: "Vietnam", "code": "VN", "colors": ["#DA251D", "#FFFF00", "#DA251D"] }
+        ];
+
+        // Dynamic 1080p coordinate projection scaler helper function
+        window.setRenderScale = function(scale) {
+            renderScale = scale;
+            mainCanvas.width = 3840 * scale;
+            mainCanvas.height = 2160 * scale;
+            drawFrame();
+        };
+
+        // Offscreen pre-rendering engine (Sabhi static assets ko ek bar generate karta hai performance badhane ke liye)
+        function preRenderFlags() {
+            countriesData.forEach(country => {
+                const size = 250; // High resolution 250px template
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const c = canvas.getContext('2d');
+                const r = size / 2;
+                
+                c.save();
+                c.translate(r, r);
+                c.beginPath();
+                c.arc(0, 0, r - 4, 0, Math.PI * 2); 
+                c.clip();
+
+                const code = country.code;
+                switch(code) {
+                    case 'FR':
+                        c.fillStyle = '#00209F'; c.fillRect(-r, -r, r * (2/3), r * 2);
+                        c.fillStyle = '#FFFFFF'; c.fillRect(-r * (1/3), -r, r * (2/3), r * 2);
+                        c.fillStyle = '#F81A2D'; c.fillRect(r * (1/3), -r, r * (2/3), r * 2);
+                        break;
+                    case 'DE':
+                        c.fillStyle = '#000000'; c.fillRect(-r, -r, r * 2, r * (2/3));
+                        c.fillStyle = '#FF0000'; c.fillRect(-r, -r * (1/3), r * 2, r * (2/3));
+                        c.fillStyle = '#FFCC00'; c.fillRect(-r, r * (1/3), r * 2, r * (2/3));
+                        break;
+                    case 'IN':
+                        c.fillStyle = '#FF9933'; c.fillRect(-r, -r, r * 2, r * (2/3));
+                        c.fillStyle = '#FFFFFF'; c.fillRect(-r, -r * (1/3), r * 2, r * (2/3));
+                        c.fillStyle = '#138808'; c.fillRect(-r, r * (1/3), r * 2, r * (2/3));
+                        c.beginPath(); c.arc(0, 0, r * 0.2, 0, Math.PI * 2); c.strokeStyle = '#000080'; c.lineWidth = r * 0.05; c.stroke();
+                        break;
+                    case 'JP':
+                        c.fillStyle = '#FFFFFF'; c.fillRect(-r, -r, r * 2, r * 2);
+                        c.beginPath(); c.arc(0, 0, r * 0.5, 0, Math.PI * 2); c.fillStyle = '#BC002D'; c.fill();
+                        break;
+                    case 'US':
+                        c.fillStyle = '#FFFFFF'; c.fillRect(-r, -r, r * 2, r * 2);
+                        c.fillStyle = '#B22234';
+                        for(let i = 0; i < 7; i++) {
+                            c.fillRect(-r, -r + (i * r * 2 / 7), r * 2, r / 7);
+                        }
+                        c.fillStyle = '#3C3B6E';
+                        c.fillRect(-r, -r, r, r);
+                        break;
+                    case 'BR':
+                        c.fillStyle = '#009739'; c.fillRect(-r, -r, r * 2, r * 2);
+                        c.fillStyle = '#FEDF00';
+                        c.beginPath();
+                        c.moveTo(0, -r * 0.7); c.lineTo(r * 0.7, 0); c.lineTo(0, r * 0.7); c.lineTo(-r * 0.7, 0);
+                        c.closePath(); c.fill();
+                        c.fillStyle = '#002776';
+                        c.beginPath(); c.arc(0, 0, r * 0.35, 0, Math.PI * 2); c.fill();
+                        break;
+                    default:
+                        c.fillStyle = country.colors[0];
+                        c.fillRect(-r, -r, r * 2, r * (2/3));
+                        c.fillStyle = country.colors[1];
+                        c.fillRect(-r, -r * (1/3), r * 2, r * (2/3));
+                        c.fillStyle = country.colors[2] || country.colors[0];
+                        c.fillRect(-r, r * (1/3), r * 2, r * (2/3));
+                        break;
+                }
+                c.restore();
+
+                // Gol borders ke sath safed border lines
+                c.beginPath();
+                c.arc(r, r, r - 5, 0, Math.PI * 2);
+                c.strokeStyle = '#ffffff';
+                c.lineWidth = 10;
+                c.stroke();
+
+                // Desh ke code ke liye bold textual display
+                c.fillStyle = '#ffffff';
+                c.strokeStyle = '#000000';
+                c.lineWidth = 14;
+                c.font = `950 85px Roboto, sans-serif`;
+                c.textAlign = 'center';
+                c.textBaseline = 'middle';
+                c.strokeText(code, r, r);
+                c.fillText(code, r, r);
+
+                flagCache[code] = canvas;
+            });
+        }
+
+        function toggleBGM() {
+            const player = document.getElementById('bgm-player');
+            const btn = document.getElementById('bgm-btn');
+            
+            if (player.paused) {
+                player.play().then(() => {
+                    btn.innerHTML = `<i class="fa-solid fa-pause"></i> Music Rokein`;
+                    btn.className = "px-2.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1";
+                }).catch(err => {
+                    console.warn("Autoplay block hua:", err);
+                });
+            } else {
+                player.pause();
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> Music Chalayein`;
+                btn.className = "px-2.5 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1";
+            }
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioDestination = audioCtx.createMediaStreamDestination();
+
+                // BGM Player ko output speaker aur record destination dono se connect karein
+                const player = document.getElementById('bgm-player');
+                try {
+                    bgmSource = audioCtx.createMediaElementSource(player);
+                    bgmSource.connect(audioCtx.destination);
+                    bgmSource.connect(audioDestination);
+                } catch(e) {
+                    console.warn("AudioContext local CORS simat. BGM normal chalega par WebM recording me shayad na aaye.", e);
+                }
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled || isHeadlessMode) return; // Headless mode me dummy process ke liye audio calculations bypass
+            initAudio();
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                
+                // Synthesizer audio ko headphones/speakers aur video recorder dono par bhejein
+                gain.connect(audioCtx.destination);
+                if (audioDestination) {
+                    gain.connect(audioDestination);
+                }
+
+                if (type === 'kick') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(45, audioCtx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+                } else if (type === 'bounce') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(140, audioCtx.currentTime + 0.06);
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.06);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.06);
+                } else if (type === 'goal') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523, audioCtx.currentTime); 
+                    osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1); 
+                    osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2); 
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + 0.35);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+                } else if (type === 'fail') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.22);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.22);
+                }
+            } catch (e) {}
+        }
+
+        function addLiveLog(message, type = 'info') {
+            let color = '#cbd5e1'; // slate-300
+            let prefix = '⚡';
+            
+            if (type === 'goal') { color = '#34d399'; prefix = '⚽'; } // emerald-400
+            else if (type === 'announcement') { color = '#fbbf24'; prefix = '📢'; } // amber-400
+            else {
+                return;
+            }
+
+            liveLogs.push({ text: `${prefix} ${message}`, color: color });
+            if (liveLogs.length > 25) liveLogs.shift();
+        }
+
+        window.onload = function() {
+            mainCanvas = document.getElementById('physics-canvas');
+            ctx = mainCanvas.getContext('2d');
+            
+            // Clean graphics cache generate karein
+            preRenderFlags();
+            
+            buildSimulationReplica();
+            resetGame();
+
+            // Headless mode check: isme loop bypass aur auto initialization on ho jata hai
+            if (isHeadlessMode) {
+                console.log("Deterministic Headless Rendering Pipeline Ready!");
+                // 1080p standard capture optimal scaling preset set karein (400% CPU boost!)
+                window.setRenderScale(0.5);
+                // Simulation automatically prepare and start
+                gameStarted = true;
+                isSimPaused = false;
+                startRound(1);
+            }
+        };
+
+        function setSimSpeed(speed) {
+            simSpeed = speed;
+            const speeds = [1, 10, 20, 30, 40, 50, 100];
+            speeds.forEach(s => {
+                const btn = document.getElementById(`speed-${s}x`);
+                if (btn) {
+                    btn.className = s === speed ? 
+                        'px-2 py-0.5 rounded text-xs font-bold bg-blue-600 text-white transition' : 
+                        'px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition';
+                }
+            });
+        }
+
+        function startGameManual() {
+            if (gameStarted) return;
+            gameStarted = true;
+            isSimPaused = false;
+            
+            // Ek baar match chalne par button ko band karein
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) {
+                startBtn.disabled = true;
+                startBtn.className = "px-3.5 py-1.5 bg-slate-800 text-slate-500 rounded-lg text-xs font-bold cursor-not-allowed flex items-center gap-1.5 shadow-none";
+                document.getElementById('start-text').textContent = "Match Chal Raha Hai";
+            }
+            resetGame(); // Match freshly reset karein jab manual start ho!
+            startRound(1);
+        }
+
+        function buildSimulationReplica() {
+            // Tezi se movement ke liye badhi hui gravity set ki gayi hai
+            engine = Engine.create({ gravity: { y: 1.65, scale: 0.001 } });
+            world = engine.world;
+
+            // Bahari boundaries (3840 x 2160 container coordinates par base hai)
+            const floor = Bodies.rectangle(1920, 2180, 3840, 80, { isStatic: true });
+            const ceiling = Bodies.rectangle(1920, -40, 3840, 80, { isStatic: true });
+            const leftWall = Bodies.rectangle(-40, 1080, 80, 2160, { isStatic: true });
+            const rightWall = Bodies.rectangle(3880, 1080, 80, 2160, { isStatic: true });
+            World.add(world, [floor, ceiling, leftWall, rightWall]);
+
+            // STRICT SANDBOX PARTITIONS (Gendon ko side panel overlays se bachaane ke liye)
+            const playAreaLeftWall = Bodies.rectangle(535, 1080, 20, 2160, { isStatic: true, label: 'wall' });
+            const playAreaRightWall = Bodies.rectangle(2955, 1080, 20, 2160, { isStatic: true, label: 'wall' });
+            World.add(world, [playAreaLeftWall, playAreaRightWall]);
+
+            // Upar ka sloped platform jo niche left ki taraf jhuka hai (Left shift: 175px)
+            const topSlope = Bodies.rectangle(1937, 130, 1996, 30, {
+                isStatic: true,
+                angle: -0.062, 
+                friction: 0.0,
+                label: 'wall'
+            });
+            
+            const topBoundaryWall = Bodies.rectangle(1937, 40, 1996, 15, { isStatic: true, label: 'wall' });
+            World.add(world, [topSlope, topBoundaryWall]);
+
+            // Chute Divider jo Plinko chute ko baki active turf se alag karta hai (Left shift: 175px)
+            const chuteWall = Bodies.rectangle(940, 1250, 25, 1750, { isStatic: true, label: 'wall' });
+            World.add(world, chuteWall);
+
+            // Left Plinko Chute static pegs (Left shift: 175px)
+            const pegs = [
+                Bodies.circle(687, 512, 50, { isStatic: true, label: 'peg' }),
+                Bodies.circle(782, 725, 50, { isStatic: true, label: 'peg' }),
+                Bodies.circle(687, 938, 50, { isStatic: true, label: 'peg' }),
+                Bodies.circle(782, 1151, 50, { isStatic: true, label: 'peg' }),
+                Bodies.circle(687, 1364, 50, { isStatic: true, label: 'peg' }),
+                Bodies.circle(782, 1577, 50, { isStatic: true, label: 'peg' })
+            ];
+            World.add(world, pegs);
+
+            // Spinner center (Left shift: 175px)
+            bootSpinner = Bodies.rectangle(728, 1995, 230, 20, {
+                isStatic: true,
+                label: 'boot_spinner'
+            });
+            World.add(world, bootSpinner);
+
+            // Spinner ke niche ke left aur right rounded corners (50px Radius)
+            const R = 50;
+            const leftCornerBodies = [];
+            const rightCornerBodies = [];
+            for (let i = 0; i <= 12; i++) {
+                const alpha = (i / 12) * (Math.PI / 2);
+                const lcx = 535 + R - R * Math.cos(alpha);
+                const lcy = 2095 - R + R * Math.sin(alpha);
+                leftCornerBodies.push(Bodies.circle(lcx, lcy, 12, { isStatic: true, label: 'wall' }));
+
+                const rcx = 940 - R + R * Math.cos(alpha);
+                const rcy = 2095 - R + R * Math.sin(alpha);
+                rightCornerBodies.push(Bodies.circle(rcx, rcy, 12, { isStatic: true, label: 'wall' }));
+            }
+            World.add(world, [...leftCornerBodies, ...rightCornerBodies]);
+
+            // Goalkeepers apne natural size par restore honge
+            defenderSweeper = Bodies.rectangle(1365, 1810, 55, 180, { isStatic: true, label: 'defender' }); 
+            defenderJumper = Bodies.rectangle(1825, 1230, 90, 240, { isStatic: true, label: 'defender' });  
+            defenderGoalie = Bodies.rectangle(2503, 1740, 65, 180, { isStatic: true, label: 'defender' });  
+            World.add(world, [defenderSweeper, defenderJumper, defenderGoalie]);
+
+            // Pit gap ke aaspas ke ground supports (Left shift: 175px)
+            const groundLeft = Bodies.rectangle(1378, 2095, 894, 64, { isStatic: true, label: 'wall' });
+            const groundRight = Bodies.rectangle(2790, 2095, 330, 64, { isStatic: true, label: 'wall' });
+            World.add(world, [groundLeft, groundRight]);
+
+            // Blocked gendon ko detect karne ke liye deep pit gap sensor
+            sensors.pitGap = Bodies.rectangle(2075, 2160, 500, 250, {
+                isStatic: true,
+                isSensor: true,
+                label: 'pit'
+            });
+            World.add(world, sensors.pitGap);
+
+            // Unche Goalpost net structures jo upar se gendon ko aasani se fislate hain
+            const goalTop = Bodies.rectangle(2790, 1100, 330, 34, { isStatic: true, angle: -0.22, label: 'wall' });
+            const goalLeftWall = Bodies.rectangle(2625, 1583, 34, 965, { isStatic: true, label: 'wall' });
+            World.add(world, [goalTop, goalLeftWall]);
+
+            // Goal scoring sensor zone
+            sensors.goalTrigger = Bodies.rectangle(2790, 1583, 290, 940, {
+                isStatic: true,
+                isSensor: true,
+                label: 'goal'
+            });
+            World.add(world, sensors.goalTrigger);
+
+            // Collisions events handle karne ke liye listener lagayein
+            Events.on(engine, 'collisionStart', handleCollisions);
+
+            // Standard animation frame loop shuru karein
+            requestAnimationFrame(renderLoop);
+        }
+
+        function resetGame() {
+            countries = countriesData.map(c => ({
+                ...c,
+                status: 'racing',
+                rank: 0,
+                eliminatedRound: 0,
+                trail: []
+            }));
+
+            currentRound = 1;
+            currentSurvivors = [];
+            currentEliminated = [];
+            matchDuration = 0; // clock reset karein
+        }
+
+        function startRound(roundNum) {
+            currentRound = roundNum;
+            const config = roundConfigs[currentRound - 1];
+            currentSurvivors = [];
+            
+            // Goalkeepers ke sizes ko pristine reset karein
+            World.remove(world, [defenderSweeper, defenderJumper, defenderGoalie]);
+            defenderSweeper = Bodies.rectangle(1365, 1810, 55, 180, { isStatic: true, label: 'defender' }); 
+            defenderJumper = Bodies.rectangle(1825, 1230, 90, 240, { isStatic: true, label: 'defender' });  
+            defenderGoalie = Bodies.rectangle(2503, 1740, 65, 180, { isStatic: true, label: 'defender' });
+            World.add(world, [defenderSweeper, defenderJumper, defenderGoalie]);
+            
+            roundTimer = 0;
+            isDefendersWindowOpen = false;
+
+            // Active balls ko saaf karein
+            marbles.forEach(m => World.remove(world, m.body));
+            marbles = [];
+
+            const activeConts = countries.filter(c => c.status === 'racing');
+
+            // Spawning queue set karein
+            if (currentRound <= 4) {
+                // Deadlock se bachne ke liye protected countries ko priority dein
+                spawnQueue = activeConts.sort((a, b) => {
+                    const aProt = protectedCountries.includes(a.code) ? 1 : 0;
+                    const bProt = protectedCountries.includes(b.code) ? 1 : 0;
+                    return bProt - aProt;
+                });
+            } else {
+                spawnQueue = [...activeConts].sort(() => Math.random() - 0.5);
+            }
+
+            lastSpawnTime = 0;
+
+            // Manual runtime checks
+            if (isHeadlessMode) {
+                // Headless automation counts immediately
+                overlayTimerActive = false;
+                overlayMode = '';
+                addLiveLog(`Round ${currentRound} Shuru Hua`, 'announcement');
+            } else {
+                // Canvas par transition countdown shuru karein
+                triggerCanvasOverlay('countdown', 3, () => {
+                    addLiveLog(`Round ${currentRound} Shuru Hua`, 'announcement');
+                });
+            }
+        }
+
+        function triggerCanvasOverlay(mode, sec, callback) {
+            overlayMode = mode;
+            overlayTimeLeft = sec;
+            overlayMode === 'countdown' ? (overlayTimerActive = true) : (overlayTimerActive = true);
+
+            function tick() {
+                if (!overlayTimerActive) return;
+                if (overlayTimeLeft > 0) {
+                    if (overlayMode === 'countdown') playSound('bounce');
+                    setTimeout(() => {
+                        overlayTimeLeft--;
+                        tick();
+                    }, 1000);
+                } else {
+                    overlayTimerActive = false;
+                    if (overlayMode === 'countdown') playSound('goal');
+                    overlayMode = ''; // Naye telemetry rendering ko shuru karne ke liye reset karein
+                    callback();
+                }
+            }
+            tick();
+        }
+
+        function spawnNextMarble() {
+            if (spawnQueue.length === 0) return;
+
+            const country = spawnQueue.shift();
+            const radius = 45; // 4K resolution sphere radius
+            
+            // Top slope par drop location (Left shift: 175px)
+            const posX = 2905;
+            const posY = 60;
+
+            const ball = Bodies.circle(posX, posY, radius, {
+                restitution: 0.96,
+                friction: 0.0,
+                frictionAir: 0.0,
+                density: 0.002,
+                label: 'marble'
+            });
+
+            ball.country = country;
+            country.trail = []; 
+
+            World.add(world, ball);
+            marbles.push({
+                body: ball,
+                country: country
+            });
+        }
+
+        function handleCollisions(event) {
+            const pairs = event.pairs;
+            pairs.forEach(pair => {
+                const labelA = pair.bodyA.label;
+                const labelB = pair.bodyB.label;
+
+                // Boot kicks
+                if ((labelA === 'marble' && labelB === 'boot_spinner') || (labelA === 'boot_spinner' && labelB === 'marble')) {
+                    const marbleBody = labelA === 'marble' ? pair.bodyA : pair.bodyB;
+                    playSound('kick');
+                    // Gend ko tezi se right side propel karein
+                    Body.setVelocity(marbleBody, {
+                        x: 58 + Math.random() * 20,
+                        y: -24 - Math.random() * 14
+                    });
+                }
+
+                // Peg bounces
+                if ((labelA === 'marble' && labelB === 'peg') || (labelA === 'peg' && labelB === 'marble')) {
+                    const marbleBody = labelA === 'marble' ? pair.bodyA : pair.bodyB;
+                    playSound('bounce');
+                }
+
+                // Goalkeeper blocks
+                if ((labelA === 'marble' && labelB === 'defender') || (labelA === 'defender' && labelB === 'marble')) {
+                    playSound('fail');
+                }
+
+                // Pit gap me jaane par top queue me bhejein (respawn)
+                if (labelA === 'pit' && labelB === 'marble') respawnToTopQueue(pair.bodyB);
+                if (labelB === 'pit' && labelA === 'marble') respawnToTopQueue(pair.bodyA);
+
+                // Goal score hone par register karein
+                if (labelA === 'goal' && labelB === 'marble') handleScore(pair.bodyB);
+                if (labelB === 'goal' && labelA === 'marble') handleScore(pair.bodyA);
+            });
+        }
+
+        function respawnToTopQueue(body) {
+            if (!body || !body.country) return;
+            Body.setPosition(body, {
+                x: 2725 + Math.random() * 200,
+                y: 60
+            });
+            Body.setVelocity(body, { x: -8, y: 4 });
+            Body.setAngularVelocity(body, 0);
+        }
+
+        function handleScore(body) {
+            if (!body || !body.country) return;
+            const country = body.country;
+
+            if (currentSurvivors.some(s => s.code === country.code)) return;
+
+            const config = roundConfigs[currentRound - 1];
+            if (currentSurvivors.length >= config.targetSurvivors) {
+                respawnToTopQueue(body);
+                return;
+            }
+
+            // Scripted top-10 finalists rule lagayein
+            if (currentRound <= 4) {
+                const openSlots = config.targetSurvivors - currentSurvivors.length;
+                const remainingProtected = countries.filter(c => c.status === 'racing' && protectedCountries.includes(c.code) && !currentSurvivors.some(s => s.code === c.code));
+                
+                if (!protectedCountries.includes(country.code) && openSlots <= remainingProtected.length) {
+                    respawnToTopQueue(body);
+                    return;
+                }
+            }
+
+            // Survivor add karein
+            currentSurvivors.push(country);
+            country.status = 'survived';
+            playSound('goal');
+            
+            if (overlayMode === '') {
+                addLiveLog(`${country.name} Surakshit Hua!`, 'goal');
+            }
+
+            World.remove(world, body);
+            marbles = marbles.filter(m => m.body !== body);
+
+            if (currentSurvivors.length === config.targetSurvivors) {
+                triggerRoundWrap();
+            }
+        }
+
+        function triggerRoundWrap() {
+            const config = roundConfigs[currentRound - 1];
+            
+            // Baki bache desh eliminate honge
+            const failedList = countries.filter(c => c.status === 'racing' && !currentSurvivors.some(s => s.code === c.code));
+
+            failedList.forEach(c => {
+                c.status = 'eliminated';
+                c.eliminatedRound = currentRound;
+            });
+            
+            currentSurvivors.forEach(c => {
+                c.status = 'racing';
+            });
+
+            currentEliminated = failedList;
+
+            playSound('fail');
+
+            if (currentRound === 9) {
+                // Simulation aur recording dono ko turant rokein
+                gameStarted = false;
+                isSimPaused = true;
+                
+                if (isRecording) {
+                    toggleRecording(); // WebM download trigger karein jab Champion mil jaye!
+                }
+
+                // Champion screen ko hamesha ke liye show karein
+                triggerCanvasOverlay('champion', 99999, () => {});
+
+                // Start button ko "Restart Match" me badlein
+                const startBtn = document.getElementById('start-btn');
+                if (startBtn) {
+                    startBtn.disabled = false;
+                    startBtn.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg";
+                    document.getElementById('start-text').textContent = "Match Dobara Shuru Karein";
+                }
+            } else {
+                if (isHeadlessMode) {
+                    // Automate immediate round switching for headlless stepping
+                    startRound(currentRound + 1);
+                } else {
+                    // Round summary ko 5 second dikhayein, phir agla round automatic chalayein
+                    triggerCanvasOverlay('round_summary', 5, () => {
+                        startRound(currentRound + 1);
+                    });
+                }
+            }
+        }
+
+        // MASTER EXPORT: Programmatic 1-Frame Deterministic Headless capture hook
+        window.stepFrame = function() {
+            const dt = 1 / 30; // Constant timestep logic
+
+            simTime += dt;
+            matchDuration += dt; 
+            roundTimer += dt; 
+
+            // Automate gendon ka release
+            if (spawnQueue.length > 0) {
+                lastSpawnTime += dt;
+                if (lastSpawnTime >= 0.35) {
+                    spawnNextMarble();
+                    lastSpawnTime = 0;
+                }
+            }
+
+            // Spinner mechanics update
+            bootAngle += 0.055;
+            Body.setAngle(bootSpinner, bootAngle);
+
+            // Defenders pattern synchronization wave
+            const cycleTime = simTime % 12;
+            let sweeperY, jumperY, goalieY;
+
+            if (cycleTime > 8) {
+                isDefendersWindowOpen = true;
+                sweeperY = 1950;
+                jumperY = 1350;
+                goalieY = 1920;
+            } else {
+                isDefendersWindowOpen = false;
+                sweeperY = 1750 + Math.sin(simTime * 1.5) * 150;
+                jumperY = 1680 + Math.sin(simTime * 1.5 - 1.2) * 255;
+                goalieY = 1720 + Math.sin(simTime * 1.5 - 2.4) * 200;
+            }
+
+            Body.setPosition(defenderSweeper, { x: defenderSweeper.position.x, y: sweeperY });
+            Body.setPosition(defenderJumper, { x: defenderJumper.position.x, y: jumperY });
+            Body.setPosition(defenderGoalie, { x: defenderGoalie.position.x, y: goalieY });
+
+            // Pure physical increments run (Zero integration lag!)
+            Engine.update(engine, dt * 1000);
+
+            // Ball positions sync & trails
+            marbles.forEach(m => {
+                m.country.trail.push({ x: m.body.position.x, y: m.body.position.y });
+                if (m.country.trail.length > 8) m.country.trail.shift();
+
+                const pos = m.body.position;
+                if (pos.y > 2220 || pos.x < 535 || pos.x > 2955) {
+                    respawnToTopQueue(m.body);
+                }
+                if (pos.x < 940 && pos.y > 1650 && Math.abs(m.body.velocity.x) < 0.05 && Math.abs(m.body.velocity.y) < 0.05) {
+                    Body.applyForce(m.body, pos, { x: 0.22, y: -0.22 });
+                }
+            });
+
+            // Refresh dashboards & HUDs
+            updateControlTimerWidget();
+            drawFrame();
+
+            // Web headless runtime data serialization return
+            return {
+                currentRound: currentRound,
+                matchDuration: matchDuration,
+                survivorCount: currentSurvivors.length,
+                totalMarbles: marbles.length,
+                isGameOver: (currentRound === 9 && isSimPaused)
+            };
+        };
+
+        // Standard 30 FPS Render loop physics stability ko barakarar rakhne ke liye
+        function renderLoop(timestamp) {
+            // Headless execution loops completely bypass standard browser requestAnimationFrame ticks
+            if (isHeadlessMode) return;
+
+            requestAnimationFrame(renderLoop);
+
+            if (!timestamp) timestamp = performance.now();
+            if (!lastRenderTime) lastRenderTime = timestamp;
+            const elapsed = timestamp - lastRenderTime;
+
+            // Frame throttling strictly 30 FPS par taaki system lag na ho
+            if (elapsed >= fpsInterval) {
+                lastRenderTime = timestamp - (elapsed % fpsInterval);
+
+                if (!isSimPaused && gameStarted) {
+                    // Sim speed multipliers ko scale step me adapt karein
+                    let steps = 1;
+                    let dt = 0.0166;
+                    
+                    if (simSpeed === 1) { steps = 2; dt = 0.0166; }
+                    else if (simSpeed === 10) { steps = 10; dt = 0.0166; }
+                    else if (simSpeed === 20) { steps = 10; dt = 0.0166 * 2; }
+                    else if (simSpeed === 30) { steps = 10; dt = 0.0166 * 3; }
+                    else if (simSpeed === 40) { steps = 10; dt = 0.0166 * 4; }
+                    else if (simSpeed === 50) { steps = 10; dt = 0.0166 * 5; }
+                    else if (simSpeed === 100) { steps = 10; dt = 0.0166 * 10; }
+
+                    const speedStep = dt * 1000;
+
+                    for (let step = 0; step < steps; step++) {
+                        simTime += dt;
+                        matchDuration += dt; 
+                        roundTimer += dt; 
+
+                        // Tezi se ball release karne ka auto-interval limit
+                        if (spawnQueue.length > 0) {
+                            lastSpawnTime += dt;
+                            if (lastSpawnTime >= 0.35) {
+                                spawnNextMarble();
+                                lastSpawnTime = 0;
+                            }
+                        }
+
+                        // Spinner kicker arms ko rotate karein
+                        bootAngle += 0.055;
+                        Body.setAngle(bootSpinner, bootAngle);
+
+                        // ⚡ RHYTHMIC TACTICAL WAVE & DEFENSE BREAKDOWNS ⚡
+                        const cycleTime = simTime % 12;
+                        let sweeperY, jumperY, goalieY;
+
+                        if (cycleTime > 8) {
+                            isDefendersWindowOpen = true;
+                            sweeperY = 1950;
+                            jumperY = 1350;
+                            goalieY = 1920;
+                        } else {
+                            isDefendersWindowOpen = false;
+                            sweeperY = 1750 + Math.sin(simTime * 1.5) * 150;
+                            jumperY = 1680 + Math.sin(simTime * 1.5 - 1.2) * 255;
+                            goalieY = 1720 + Math.sin(simTime * 1.5 - 2.4) * 200;
+                        }
+
+                        Body.setPosition(defenderSweeper, { x: defenderSweeper.position.x, y: sweeperY });
+                        Body.setPosition(defenderJumper, { x: defenderJumper.position.x, y: jumperY });
+                        Body.setPosition(defenderGoalie, { x: defenderGoalie.position.x, y: goalieY });
+
+                        Engine.update(engine, speedStep);
+
+                        // Gendon ke visual trails track karein
+                        marbles.forEach(m => {
+                            m.country.trail.push({ x: m.body.position.x, y: m.body.position.y });
+                            if (m.country.trail.length > 8) m.country.trail.shift();
+
+                            const pos = m.body.position;
+
+                            // Offscreen girne par dobara top par recirculate karein
+                            if (pos.y > 2220 || pos.x < 535 || pos.x > 2955) {
+                                respawnToTopQueue(m.body);
+                            }
+
+                            // Fasi hui gendon ko push karne ke liye force apply karein
+                            if (pos.x < 940 && pos.y > 1650 && Math.abs(m.body.velocity.x) < 0.05 && Math.abs(m.body.velocity.y) < 0.05) {
+                                Body.applyForce(m.body, pos, { x: 0.22, y: -0.22 });
+                            }
+                        });
+                    }
+                }
+
+                // Control Timer Widget update karein
+                updateControlTimerWidget();
+
+                // Canvas viewport par interactive layers draw karein
+                drawFrame();
+            }
+        }
+
+        function updateControlTimerWidget() {
+            const timerEl = document.getElementById('session-timer');
+            if (!timerEl) return;
+            
+            const totalMs = Math.floor(matchDuration * 1000);
+            const hrs = Math.floor(totalMs / 3600000).toString().padStart(2, '0');
+            const mins = Math.floor((totalMs % 3600000) / 60000).toString().padStart(2, '0');
+            const secs = Math.floor((totalMs % 60000) / 1000).toString().padStart(2, '0');
+            
+            timerEl.textContent = `${hrs}:${mins}:${secs}`;
+        }
+
+        function drawFrame() {
+            // Dynamic scale dimension check clear operation ke liye
+            ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+            // Matrix context stack scaling projection apply karein
+            ctx.save();
+            ctx.scale(renderScale, renderScale);
+
+            // Black arena background (Standard coordinates are strictly 3840 x 2160)
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 3840, 2160);
+
+            // Left Sidebar background (Live Telemetry / Commentary)
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+            ctx.fillRect(0, 0, 525, 2160);
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(0, 0, 525, 2160);
+
+            // Right Sidebar background (Standings / Leaderboard)
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+            ctx.fillRect(2965, 0, 875, 2160);
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(2965, 0, 875, 2160);
+
+            // Static boundaries draw karein
+            const bodies = Composite.allBodies(world);
+            bodies.forEach(b => {
+                if (b.isSensor) return;
+
+                ctx.save();
+                if (b.label === 'wall') {
+                    ctx.fillStyle = '#1e293b';
+                    ctx.beginPath();
+                    b.vertices.forEach((v, idx) => {
+                        if (idx === 0) ctx.moveTo(v.x, v.y);
+                        else ctx.lineTo(v.x, v.y);
+                    });
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (b.label === 'peg') {
+                    ctx.fillStyle = '#555555';
+                    ctx.strokeStyle = '#333333';
+                    ctx.lineWidth = 12;
+                    ctx.beginPath();
+                    ctx.arc(b.position.x, b.position.y, b.circleRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                ctx.restore();
+            });
+
+            // Boot Spinner draw karein
+            ctx.save();
+            ctx.translate(bootSpinner.position.x, bootSpinner.position.y);
+            ctx.rotate(bootSpinner.angle);
+            
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 36;
+            ctx.beginPath();
+            ctx.moveTo(-115, 0); ctx.lineTo(115, 0);
+            ctx.moveTo(0, -115); ctx.lineTo(0, 115);
+            ctx.stroke();
+
+            const spokeSize = 115;
+            drawBlueBoot(ctx, spokeSize, 0, 0); 
+            drawBlueBoot(ctx, -spokeSize, 0, Math.PI); 
+            drawBlueBoot(ctx, 0, spokeSize, Math.PI / 2); 
+            drawBlueBoot(ctx, 0, -spokeSize, -Math.PI / 2); 
+            ctx.restore();
+
+            // Spinner chamber ke niche rounding fillets
+            ctx.save();
+            ctx.fillStyle = '#1e293b';
+            // Left Rounded Corner
+            ctx.beginPath();
+            ctx.moveTo(535, 2095);
+            ctx.lineTo(535, 2045);
+            ctx.quadraticCurveTo(535, 2095, 585, 2095);
+            ctx.closePath();
+            ctx.fill();
+
+            // Right Rounded Corner
+            ctx.beginPath();
+            ctx.moveTo(940, 2095);
+            ctx.lineTo(940, 2045);
+            ctx.quadraticCurveTo(940, 2095, 890, 2095);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // Goalkeepers draw karein
+            drawFootballerCharacter(ctx, defenderSweeper, '#10b981', '#047857'); // Sweeper - Hara
+            drawFootballerCharacter(ctx, defenderJumper, '#2563eb', '#1e40af');  // Jumper - Neela
+            drawFootballerCharacter(ctx, defenderGoalie, '#a855f7', '#7e22ce');  // Goalie - Purple
+
+            // Tall Goalposts net structured lines
+            ctx.save();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 12;
+            ctx.strokeRect(2625, 1100, 330, 965);
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 4;
+            for (let gx = 2625; gx <= 2955; gx += 48) {
+                ctx.beginPath(); ctx.moveTo(gx, 1100); ctx.lineTo(gx, 2065); ctx.stroke();
+            }
+            for (let gy = 1100; gy <= 2065; gy += 40) {
+                ctx.beginPath(); ctx.moveTo(2625, gy); ctx.lineTo(2955, gy); ctx.stroke();
+            }
+            ctx.restore();
+
+            // Grass floors (Green pitches)
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(940, 2095, 894, 65); 
+            ctx.fillRect(2325, 2095, 630, 65); 
+
+            // Active trails draw karein
+            ctx.save();
+            marbles.forEach(m => {
+                m.country.trail.forEach((pos, idx) => {
+                    const alpha = (idx + 1) / m.country.trail.length * 0.25;
+                    ctx.fillStyle = m.country.colors[0];
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 45 - (8 - idx) * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            });
+            ctx.restore();
+
+            // Spheres flags optimize draw
+            marbles.forEach(m => {
+                const pos = m.body.position;
+                drawCountryFlag(ctx, pos.x, pos.y, m.body.circleRadius, m.country);
+            });
+
+            // Survivors HUD box on top center
+            ctx.save();
+            ctx.fillStyle = '#000000';
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 10;
+            ctx.fillRect(1145, 140, 1200, 200);
+            ctx.strokeRect(1145, 140, 1200, 200);
+
+            ctx.fillStyle = '#22c55e';
+            ctx.font = '900 48px Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Bachne Wale (Survivors)', 1745, 95);
+
+            currentSurvivors.forEach((c, idx) => {
+                const col = idx % 20; 
+                const row = Math.floor(idx / 20); 
+                const sx = 1190 + (col * 58); 
+                const sy = 195 + (row * 60);  
+                drawCountryFlag(ctx, sx, sy, 25, c); 
+            });
+
+            const config = roundConfigs[currentRound - 1];
+            const leftSpots = config.targetSurvivors - currentSurvivors.length;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 52px Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Bache Hue Spots: ${leftSpots}`, 1745, 410);
+
+            // Defensive Gap breakdown warning sign
+            if (isDefendersWindowOpen) {
+                let blinkAlpha = 0.5 + Math.sin(Date.now() * 0.015) * 0.45;
+                ctx.fillStyle = `rgba(239, 68, 68, ${blinkAlpha})`; 
+                ctx.font = '900 40px Share Tech Mono, monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(`⚡ DEFENSE TOOT GAYA: GOAL KA RASTA KHULA HAI ⚡`, 1745, 480);
+            }
+            ctx.restore();
+
+            // Left Sidebar: Live Commentary Telemetry
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 42px Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('MATCH TELEMETRY', 262, 95);
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(50, 130); ctx.lineTo(475, 130); ctx.stroke();
+
+            // Target requirements box in sidebar
+            const currentConfig = roundConfigs[currentRound - 1];
+            const startC = currentConfig.startCount;
+            const targetC = currentConfig.targetSurvivors;
+            const elimC = startC - targetC;
+            ctx.fillStyle = '#fbbf24'; 
+            ctx.font = '900 40px Share Tech Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`LAKSHY: ${startC} ➔ ${targetC} SURAKSHIT`, 262, 185);
+            ctx.font = '700 32px Share Tech Mono, monospace';
+            ctx.fillText(`(OUT HONE WALE: ${elimC} DESH)`, 262, 230);
+
+            ctx.font = '600 30px Share Tech Mono, monospace';
+            ctx.textAlign = 'left';
+            liveLogs.forEach((log, idx) => {
+                ctx.fillStyle = log.color;
+                ctx.fillText(log.text, 50, 305 + (idx * 75), 425);
+            });
+            ctx.restore();
+
+            // Right Sidebar: Live Standings (Desh ki ratings)
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 42px Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('STANDINGS (DESH)', 3402, 95);
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(3015, 130); ctx.lineTo(3790, 130); ctx.stroke();
+
+            ctx.textBaseline = 'middle';
+            countries.forEach((c, idx) => {
+                const col = Math.floor(idx / 25);
+                const row = idx % 25;
+                const ly = 210 + (row * 76);
+
+                let badgeColor = '#94a3b8'; 
+                let statusLabel = 'RACE MEIN';
+                if (c.status === 'eliminated') {
+                    badgeColor = '#f87171'; 
+                    statusLabel = `OUT R${c.eliminatedRound}`;
+                } else if (currentSurvivors.some(s => s.code === c.code)) {
+                    badgeColor = '#34d399'; 
+                    statusLabel = 'SURAKSHIT';
+                }
+
+                let fx, nx, sx; 
+                if (col === 0) {
+                    fx = 3003; 
+                    nx = 3040; 
+                    sx = 3384; 
+                } else {
+                    fx = 3428; 
+                    nx = 3467; 
+                    sx = 3828; 
+                }
+
+                drawCountryFlag(ctx, fx, ly, 24, c);
+                
+                ctx.fillStyle = '#f1f5f9';
+                ctx.font = '800 36px Roboto, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(c.name.substring(0, 11), nx, ly);
+
+                ctx.fillStyle = badgeColor;
+                ctx.font = '900 26px Share Tech Mono, monospace'; 
+                ctx.textAlign = 'right';
+                ctx.fillText(statusLabel, sx, ly);
+            });
+            ctx.restore();
+
+            // Overlay transitions render karein
+            if (overlayTimerActive) {
+                renderOverlayScreen();
+            }
+
+            // Pop scaling restore context
+            ctx.restore();
+        }
+
+        function renderOverlayScreen() {
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.94)';
+            ctx.fillRect(535, 0, 2420, 2160);
+
+            if (overlayMode === 'countdown') {
+                ctx.fillStyle = '#60a5fa';
+                ctx.font = '900 180px Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(overlayTimeLeft, 1745, 1000);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '700 48px Roboto, sans-serif';
+                ctx.fillText(`ROUND ${currentRound} JALD SHURU HOGA`, 1745, 1150);
+            } else if (overlayMode === 'round_summary') {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '900 85px Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`ROUND ${currentRound} PURA HUA!`, 1745, 230); 
+
+                ctx.fillStyle = '#34d399';
+                ctx.font = '900 48px Roboto, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(`SURAKSHIT (${currentSurvivors.length})`, 675, 385);
+
+                currentSurvivors.forEach((c, idx) => {
+                    const col = idx % 10;
+                    const row = Math.floor(idx / 10);
+                    const rx = 675 + (col * 110);
+                    const ry = 465 + (row * 110); 
+                    drawCountryFlag(ctx, rx, ry, 45, c);
+                });
+
+                ctx.fillStyle = '#f87171';
+                ctx.font = '900 48px Roboto, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(`BAHAR HUYE (ELIMINATED) (${currentEliminated.length})`, 675, 1065);
+
+                currentEliminated.forEach((c, idx) => {
+                    const col = idx % 10;
+                    const row = Math.floor(idx / 10);
+                    const rx = 675 + (col * 110);
+                    const ry = 1145 + (row * 110); 
+                    drawCountryFlag(ctx, rx, ry, 45, c);
+                });
+
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = '700 48px Share Tech Mono, monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Agla round ${overlayTimeLeft}s mein shuru hoga...`, 1745, 1950);
+            } else if (overlayMode === 'champion') {
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = '900 120px Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('👑 VIJETA / CHAMPION 👑', 1745, 450);
+
+                const winner = currentSurvivors[0];
+                drawCountryFlag(ctx, 1745, 900, 250, winner);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '900 110px Roboto, sans-serif';
+                ctx.fillText(winner.name.toUpperCase(), 1745, 1350);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '700 48px Share Tech Mono, monospace';
+                ctx.fillText(`Tournament Khatam! Dobara khelne ke liye upar 'Match Dobara Shuru Karein' par click karein.`, 1745, 1650);
+            }
+
+            ctx.restore();
+        }
+
+        // Blade arms rotate properties
+        function drawBlueBoot(c, x, y, angle) {
+            c.save();
+            c.translate(x, y);
+            c.rotate(angle);
+            
+            c.fillStyle = '#2563eb';
+            c.strokeStyle = '#ffffff';
+            c.lineWidth = 4;
+            c.beginPath();
+            c.ellipse(18, 0, 32, 16, 0, 0, Math.PI * 2);
+            c.fill(); c.stroke();
+            
+            c.fillStyle = '#ffffff';
+            c.fillRect(5, 9, 24, 6);
+            c.restore();
+        }
+
+        // Footballers model proportional drawing structure
+        function drawFootballerCharacter(ctx, body, shirtCol, pantsCol) {
+            const pos = body.position;
+            const w = body.bounds.max.x - body.bounds.min.x;
+            const h = body.bounds.max.y - body.bounds.min.y;
+
+            ctx.save();
+            ctx.translate(pos.x, pos.y);
+
+            // Sir (Head)
+            const headRadius = h * 0.10;
+            const headY = -h/2 + headRadius;
+            ctx.fillStyle = '#d1a080'; 
+            ctx.beginPath();
+            ctx.arc(0, headY, headRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Baal (Hair)
+            ctx.fillStyle = '#2d1a0a';
+            ctx.beginPath();
+            ctx.arc(0, headY - h*0.03, headRadius * 1.1, Math.PI, 0);
+            ctx.fill();
+
+            // Haath (Arms)
+            ctx.strokeStyle = '#d1a080';
+            ctx.lineWidth = w * 0.18;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-w/2, -h/2 + h*0.35);
+            ctx.lineTo(-w/2 - w*0.2, -h/2 + h*0.1);
+            ctx.moveTo(w/2, -h/2 + h*0.35);
+            ctx.lineTo(w/2 + w*0.2, -h/2 + h*0.1);
+            ctx.stroke();
+
+            // Jersey Shirt (Torso)
+            ctx.fillStyle = shirtCol;
+            ctx.fillRect(-w/2, -h/2 + h*0.20, w, h*0.36);
+
+            // Shorts (Pants)
+            ctx.fillStyle = pantsCol;
+            ctx.fillRect(-w/2, -h/2 + h*0.56, w, h*0.15);
+
+            // Pair (Legs)
+            ctx.fillStyle = '#d1a080';
+            const legWidth = w * 0.28;
+            ctx.fillRect(-w * 0.35, -h/2 + h*0.71, legWidth, h*0.17);
+            ctx.fillRect(w * 0.35 - legWidth, -h/2 + h*0.71, legWidth, h*0.17);
+
+            // Cleats (Shoes)
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(-w * 0.42, -h/2 + h*0.88, w * 0.36, h*0.12);
+            ctx.fillRect(w * 0.42 - w * 0.36, -h/2 + h*0.88, w * 0.36, h*0.12);
+
+            ctx.restore();
+        }
+
+        // Flags render optimization
+        function drawCountryFlag(ctxCanvas, x, y, r, country) {
+            const cachedFlag = flagCache[country.code];
+            if (cachedFlag) {
+                ctxCanvas.drawImage(cachedFlag, x - r, y - r, r * 2, r * 2);
+            } else {
+                ctxCanvas.fillStyle = country.colors[0];
+                ctxCanvas.beginPath(); ctxCanvas.arc(x, y, r, 0, Math.PI * 2); ctxCanvas.fill();
+            }
+        }
+
+        // BROWSER RECORDING ENGINE: HD 4K Video aur High-quality Audio dono record karta hai
+        function toggleRecording() {
+            const btn = document.getElementById('record-btn');
+            const txt = document.getElementById('record-text');
+
+            if (!isRecording) {
+                // Agar simulation start nahi hai, to shuru karein
+                if (!gameStarted) {
+                    startGameManual();
+                }
+
+                // Audio track sync initialize karein
+                initAudio();
+                recordedChunks = [];
+                
+                // Canvas stream capture karein at 30 fps
+                const canvasStream = mainCanvas.captureStream(30); 
+                const videoTrack = canvasStream.getVideoTracks()[0];
+                
+                // Synthesized audio tracks add karein
+                let combinedStream;
+                if (audioDestination && audioDestination.stream.getAudioTracks().length > 0) {
+                    const audioTrack = audioDestination.stream.getAudioTracks()[0];
+                    combinedStream = new MediaStream([videoTrack, audioTrack]);
+                } else {
+                    combinedStream = canvasStream;
+                }
+
+                // Smooth high-fidelity WebM codec setup
+                let options = { mimeType: 'video/webm;codecs=vp8', videoBitsPerSecond: 12000000 }; 
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'video/webm' };
+                }
+
+                try {
+                    mediaRecorder = new MediaRecorder(combinedStream, options);
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+                    };
+                    mediaRecorder.onstop = saveRecording;
+                    mediaRecorder.start();
+
+                    isRecording = true;
+                    btn.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg animate-pulse";
+                    txt.textContent = "Recording Chalu (Rokne Ke Liye Click Karein)";
+                    
+                    // Recording shuru hote hi background music on karein
+                    const player = document.getElementById('bgm-player');
+                    if (player && player.paused) {
+                        toggleBGM();
+                    }
+                } catch (err) {
+                    console.error("Recording start karne me issue hua:", err);
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.className = "px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg";
+                txt.textContent = "Browser Record (Audio Ke Sath)";
+            }
+        }
+
+        function saveRecording() {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style = 'display: none';
+            a.href = url;
+            a.download = `beat_the_keeper_4k_studio.webm`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

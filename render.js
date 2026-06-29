@@ -1,135 +1,99 @@
 /**
- * BEAT THE KEEPER - HEADLESS RENDERING PIPELINE
- * Playwright deterministic automation engine combined with lossy-less piping
- * and pristine FFmpeg Lanczos 4K (3840x2160) scaling blocks.
+ * BEAT THE KEEPER - AUTOMATED CHROMIUM REAL-TIME AUDIO+VIDEO RECORDER
+ * This script runs the game naturally, triggers browser-side MediaRecorder inside Chromium,
+ * grabs the pristine WebM track with integrated audio streams via a Node.js bridge,
+ * and outputs a perfectly synchronized 4K high-compatibility MP4 video file.
  */
 
 const { chromium } = require('playwright');
-const { spawn } = require('child_process');
+const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 async function main() {
     console.log("-----------------------------------------------------------------");
-    console.log("⚽ BEAT THE KEEPER - 4K ULTRA HD AUTOMATED RENDERER SHURU HO RAHA HAI ⚽");
+    console.log("⚽ REAL-TIME BROWSER-SIDE AUDIO & VIDEO RECORDING SHURU HO RAHA HAI ⚽");
     console.log("-----------------------------------------------------------------");
 
-    // Headless Browser Launch karein
+    const webmPath = path.resolve(__dirname, 'recording_raw.webm');
+    const mp4Path = path.resolve(__dirname, 'beat_the_keeper_4k.mp4');
+
+    // Setup active state promises
+    let resolveRecording;
+    const recordingPromise = new Promise((resolve) => {
+        resolveRecording = resolve;
+    });
+
+    // Chromium launch flags for headless audio loopback capture
     const browser = await chromium.launch({
         headless: true,
         args: [
+            '--autoplay-policy=no-user-gesture-required',
+            '--use-fake-ui-for-media-stream',
+            '--use-fake-device-for-media-stream',
             '--disable-web-security',
-            '--allow-file-access-from-files',
-            '--force-device-scale-factor=1',
-            '--disable-gpu-vsync'
+            '--allow-file-access-from-files'
         ]
     });
 
-    const page = await browser.newPage();
-    
-    // Viewport precisely set as 1080p standard layout box
-    await page.setViewportSize({ width: 1920, height: 1080 });
+    const context = await browser.newContext({
+        permissions: ['microphone'], // Allows loopback synthesizers audio stream capturing without system audio hardware
+    });
 
-    // Local workspace index file mapping
+    const page = await context.newPage();
+
+    // Widescreen 4K Viewport mapping (3840 x 2160 pixels)
+    await page.setViewportSize({ width: 3840, height: 2160 });
+
+    // Expose Node.js Bridge function
+    await page.exposeFunction('saveVideoChunkToDisk', (base64Data) => {
+        console.log("⚡ Success! Browser-side MediaRecorder stream buffer fully received via Bridge!");
+        const buffer = Buffer.from(base64Data, 'base64');
+        fs.writeFileSync(webmPath, buffer);
+        console.log(`💾 Raw WebM written successfully to path: ${webmPath}`);
+        resolveRecording();
+    });
+
+    // Mapping game URL
     const fileUrl = `file://${path.resolve(__dirname, 'beat_the_keeper.html')}?headless=true`;
     console.log(`Loading Game URL: ${fileUrl}`);
+    
     await page.goto(fileUrl);
+    console.log("Waiting for game simulation, telemetry rounds, and real-time audio recording stream to end...");
 
-    // Initial stabilization load window setup
-    await page.waitForTimeout(2000);
+    // Set maximum timeout of 12 minutes (720,000 ms) in case of any pipeline deadlock
+    await Promise.race([
+        recordingPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Recording timed out after 12 minutes.")), 720000))
+    ]);
 
-    // Canvas scaling to standard 1080p (0.5x coordinate multiplier)
-    await page.evaluate(() => {
-        window.setRenderScale(0.5);
-    });
-
-    // Output video container path definition
-    const outputVideoPath = path.resolve(__dirname, 'beat_the_keeper_4k_lanczos.mp4');
-
-    /**
-     * FFmpeg pipeline command mapping:
-     * - Takes PNG stream from stdin pipe (-f image2pipe -vcodec png)
-     * - Reads at 30 fps locked target (-r 30)
-     * - Upscales from 1080p to 4K using advanced 'lanczos' algorithm
-     * - Codes to highly-compatible H.264 mp4 codec
-     */
-    const ffmpegArgs = [
-        '-f', 'image2pipe',
-        '-vcodec', 'png',
-        '-r', '30',
-        '-i', '-',
-        '-vf', 'scale=3840:2160:flags=lanczos',
-        '-vcodec', 'libx264',
-        '-pix_fmt', 'yuv420p',
-        '-crf', '16',                  // Extreme high-bitrate visual sharpness quality definition
-        '-preset', 'fast',
-        '-y',
-        outputVideoPath
-    ];
-
-    console.log(`FFmpeg upscale pipeline target initialized! Saving to: ${outputVideoPath}`);
-    const ffmpeg = spawn('ffmpeg', ffmpegArgs);
-
-    ffmpeg.stderr.on('data', (data) => {
-        // Log basic encoding telemetry logs safely
-        const logStr = data.toString();
-        if (logStr.includes('frame=') || logStr.includes('fps=')) {
-            process.stdout.write(`\rFFmpeg Telemetry: ${logStr.trim().split('\n').pop()}`);
-        }
-    });
-
-    ffmpeg.on('close', (code) => {
-        console.log(`\nFFmpeg Process completed with termination code: ${code}`);
-    });
-
-    let frameCount = 0;
-    let keepRunning = true;
-    const canvasSelector = '#physics-canvas';
-
-    console.log("Deterministic stepping framework capturing initialized...");
-
-    while (keepRunning) {
-        // Execute 1 frame increments strictly inside headless Matter.js sandbox context
-        const status = await page.evaluate(() => {
-            return window.stepFrame();
-        });
-
-        // Capture standard lossless canvas frame PNG buffer
-        const canvasElement = await page.locator(canvasSelector);
-        const imageBuffer = await canvasElement.screenshot({ type: 'png' });
-
-        // Pipe directly to FFmpeg process input to bypass disk I/O lag entirely
-        ffmpeg.stdin.write(imageBuffer);
-
-        frameCount++;
-
-        if (frameCount % 60 === 0) {
-            console.log(`\n[RENDER STATE] Frame count: ${frameCount} | Current Round: ${status.currentRound} | Active marbles: ${status.totalMarbles}`);
-        }
-
-        // Termination target constraint: Champion is decided!
-        if (status.isGameOver) {
-            console.log(`\n👑 Grand Champion decided successfully at frame: ${frameCount}! Ending capture loop.`);
-            keepRunning = false;
-        }
-
-        // Safety limit: 12,000 frames (~6 mins max run time) to prevent cloud billing loops
-        if (frameCount > 12000) {
-            console.log("\n[WARNING] Video threshold safely exceeded. Terminating task.");
-            keepRunning = false;
-        }
-    }
-
-    // Terminate streams
-    ffmpeg.stdin.end();
-
-    console.log("Saving complete upscaled video elements...");
     await browser.close();
 
     console.log("-----------------------------------------------------------------");
-    console.log("🎉 RENDERING & CRISP 4K LANCZOS ENCODING FINISHED SUCCESSFULLY! 🎉");
+    console.log("🔄 REMUXING WEBM TO COMPATIBLE MP4 USING FFMPEG 🔄");
     console.log("-----------------------------------------------------------------");
+
+    try {
+        console.log("Encoding audio tracks & packaging H.264 compatible MP4 video stream...");
+        // Convert VP8/VP9 WebM track to standard H.264 + AAC with extreme high fidelity preset
+        execSync(`ffmpeg -i "${webmPath}" -vcodec libx264 -pix_fmt yuv420p -preset fast -crf 17 -acodec aac -b:a 192k -y "${mp4Path}"`, { stdio: 'inherit' });
+        console.log(`🎉 Perfect 4K MP4 with synced audio created successfully at: ${mp4Path}`);
+        
+        // Remove raw WebM temp file to keep workspace clean
+        if (fs.existsSync(webmPath)) {
+            fs.unlinkSync(webmPath);
+        }
+    } catch (err) {
+        console.error("FFmpeg conversion failed. Attempting copy container container remux bypass...", err);
+        try {
+            execSync(`ffmpeg -i "${webmPath}" -c copy -y "${mp4Path}"`, { stdio: 'inherit' });
+        } catch (copyErr) {
+            console.error("Backup copy remux failed as well.", copyErr);
+        }
+    }
 }
 
 main().catch(err => {
-    console.error("Critical rendering execution failed:", err);
+    console.error("Critical automated pipeline execution failed:", err);
+    process.exit(1);
 });

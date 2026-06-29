@@ -85,16 +85,17 @@
                 </button>
             </div>
 
-            <!-- Simulation Speed Modifiers -->
+            <!-- Simulation Speed Modifiers (Natively scaled from 1x to 100x) -->
             <div class="bg-slate-800 px-3 py-1 rounded-lg flex items-center space-x-2 border border-slate-700">
                 <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Speed:</span>
                 <div class="flex space-x-1" id="speed-controls">
                     <button onclick="setSimSpeed(1)" id="speed-1x" class="px-2 py-0.5 rounded text-xs font-bold bg-blue-600 text-white transition">1x</button>
-                    <button onclick="setSimSpeed(2)" id="speed-2x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">2x</button>
-                    <button onclick="setSimSpeed(4)" id="speed-4x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">4x</button>
-                    <button onclick="setSimSpeed(6)" id="speed-6x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">6x</button>
-                    <button onclick="setSimSpeed(8)" id="speed-8x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">8x</button>
                     <button onclick="setSimSpeed(10)" id="speed-10x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">10x</button>
+                    <button onclick="setSimSpeed(20)" id="speed-20x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">20x</button>
+                    <button onclick="setSimSpeed(30)" id="speed-30x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">30x</button>
+                    <button onclick="setSimSpeed(40)" id="speed-40x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">40x</button>
+                    <button onclick="setSimSpeed(50)" id="speed-50x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">50x</button>
+                    <button onclick="setSimSpeed(100)" id="speed-100x" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">100x</button>
                 </div>
             </div>
         </div>
@@ -183,6 +184,11 @@
         // Offscreen canvas cache for country flags (Prevents CPU/GPU overhead)
         const flagCache = {};
 
+        // Speed optimization: Sync pattern cycles
+        let roundTimer = 0; 
+        let currentScale = 1.0; 
+        let isDefendersWindowOpen = false; // Tracks if defensive gap is currently open
+
         // Complete 50 countries dataset
         const countriesData = [
             { name: "Argentina", code: "AR", colors: ["#74ACDF", "#FFFFFF", "#F6B426"] },
@@ -237,7 +243,7 @@
             { name: "Vietnam", "code": "VN", "colors": ["#DA251D", "#FFFF00", "#DA251D"] }
         ];
 
-        // Offscreen pre-rendering engine (Builds static assets exactly once to remove GPU bottleneck)
+        // Offscreen pre-rendering engine (Builds static assets exactly once to remove CPU/GPU overhead)
         function preRenderFlags() {
             countriesData.forEach(country => {
                 const size = 250; // High resolution 250px template
@@ -434,15 +440,21 @@
 
         function setSimSpeed(speed) {
             simSpeed = speed;
-            [1, 2, 4, 6, 8, 10].forEach(s => {
+            const speeds = [1, 10, 20, 30, 40, 50, 100];
+            speeds.forEach(s => {
                 const btn = document.getElementById(`speed-${s}x`);
-                if (btn) btn.className = s === speed ? 'px-2 py-0.5 rounded text-xs font-bold bg-blue-600 text-white transition' : 'px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition';
+                if (btn) {
+                    btn.className = s === speed ? 
+                        'px-2 py-0.5 rounded text-xs font-bold bg-blue-600 text-white transition' : 
+                        'px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition';
+                }
             });
         }
 
         function startGameManual() {
             if (gameStarted) return;
             gameStarted = true;
+            isSimPaused = false;
             
             // Disable manual start button once match is successfully running
             const startBtn = document.getElementById('start-btn');
@@ -451,11 +463,13 @@
                 startBtn.className = "px-3.5 py-1.5 bg-slate-800 text-slate-500 rounded-lg text-xs font-bold cursor-not-allowed flex items-center gap-1.5 shadow-none";
                 document.getElementById('start-text').textContent = "Match Running";
             }
+            resetGame(); // Ensure countries and rounds are freshly reset on manual start!
             startRound(1);
         }
 
         function buildSimulationReplica() {
-            engine = Engine.create({ gravity: { y: 1.30, scale: 0.001 } });
+            // Boosted gravity scale for lightning fast drops and natural movement
+            engine = Engine.create({ gravity: { y: 1.65, scale: 0.001 } });
             world = engine.world;
 
             // Outside Boundaries (Mapping on a 3840 x 2160 container coordinates)
@@ -521,10 +535,11 @@
             }
             World.add(world, [...leftCornerBodies, ...rightCornerBodies]);
 
-            // Three active goalkeeper defenders scaled on 4K coordinates (Shifted left by 175px) - Made slightly smaller for faster scoring
-            defenderSweeper = Bodies.rectangle(1365, 1810, 70, 220, { isStatic: true, label: 'defender' }); 
-            defenderJumper = Bodies.rectangle(1825, 1230, 110, 320, { isStatic: true, label: 'defender' });  
-            defenderGoalie = Bodies.rectangle(2503, 1740, 80, 240, { isStatic: true, label: 'defender' });  
+            // Rebuilt dynamically inside startRound to avoid scaling leaks
+            // Keepers remain at their natural visual sizes! No shrinking needed anymore.
+            defenderSweeper = Bodies.rectangle(1365, 1810, 55, 180, { isStatic: true, label: 'defender' }); 
+            defenderJumper = Bodies.rectangle(1825, 1230, 90, 240, { isStatic: true, label: 'defender' });  
+            defenderGoalie = Bodies.rectangle(2503, 1740, 65, 180, { isStatic: true, label: 'defender' });  
             World.add(world, [defenderSweeper, defenderJumper, defenderGoalie]);
 
             // Ground supports around the pit gap (Shifted left by 175px)
@@ -581,6 +596,16 @@
             const config = roundConfigs[currentRound - 1];
             currentSurvivors = [];
             
+            // Re-instantiate pristine goalkeeper sizes
+            World.remove(world, [defenderSweeper, defenderJumper, defenderGoalie]);
+            defenderSweeper = Bodies.rectangle(1365, 1810, 55, 180, { isStatic: true, label: 'defender' }); 
+            defenderJumper = Bodies.rectangle(1825, 1230, 90, 240, { isStatic: true, label: 'defender' });  
+            defenderGoalie = Bodies.rectangle(2503, 1740, 65, 180, { isStatic: true, label: 'defender' });
+            World.add(world, [defenderSweeper, defenderJumper, defenderGoalie]);
+            
+            roundTimer = 0;
+            isDefendersWindowOpen = false;
+
             // Wipe active spheres
             marbles.forEach(m => World.remove(world, m.body));
             marbles = [];
@@ -767,13 +792,26 @@
             playSound('fail');
 
             if (currentRound === 9) {
-                // Crown champion, show screen for 8 seconds, then restart automatically
-                triggerCanvasOverlay('champion', 8, () => {
-                    if (isRecording) {
-                        toggleRecording(); // Stop and automatically trigger download on champion reveal!
-                    }
-                    resetGame();
+                // Stop the simulation loop and recording immediately
+                gameStarted = false;
+                isSimPaused = true;
+                
+                if (isRecording) {
+                    toggleRecording(); // Stop and automatically trigger download on champion reveal!
+                }
+
+                // Show champion screen indefinitely (or very long 99999s) and enable manual restart
+                triggerCanvasOverlay('champion', 99999, () => {
+                    // Do nothing on timeout
                 });
+
+                // Re-enable Start button as "Restart Match"
+                const startBtn = document.getElementById('start-btn');
+                if (startBtn) {
+                    startBtn.disabled = false;
+                    startBtn.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg";
+                    document.getElementById('start-text').textContent = "Restart Match";
+                }
             } else {
                 // Show round results for 5 seconds, then advance automatically
                 triggerCanvasOverlay('round_summary', 5, () => {
@@ -796,18 +834,30 @@
 
                 // Run physics steps only if match has been started by user
                 if (!isSimPaused && gameStarted) {
-                    const speedStep = 1000 / 60; // 60hz physics clock steps
+                    // Scale steps & physics dt according to extreme multipliers (1x to 100x)
+                    // This avoids browser freeze but accelerates time perfectly in 1:1 ratio!
+                    let steps = 1;
+                    let dt = 0.0166;
                     
-                    // Decouple physics from rendering (Runs 2 fast steps per 30fps frame)
-                    const stepsPerFrame = 2 * simSpeed;
-                    for (let step = 0; step < stepsPerFrame; step++) {
-                        simTime += 0.0166;
-                        matchDuration += 0.0166; // Clock ticks inside control panel
+                    if (simSpeed === 1) { steps = 2; dt = 0.0166; }
+                    else if (simSpeed === 10) { steps = 10; dt = 0.0166; }
+                    else if (simSpeed === 20) { steps = 10; dt = 0.0166 * 2; }
+                    else if (simSpeed === 30) { steps = 10; dt = 0.0166 * 3; }
+                    else if (simSpeed === 40) { steps = 10; dt = 0.0166 * 4; }
+                    else if (simSpeed === 50) { steps = 10; dt = 0.0166 * 5; }
+                    else if (simSpeed === 100) { steps = 10; dt = 0.0166 * 10; }
 
-                        // Faster auto-release drops (decreased from 1.0s to 0.6s spawn interval for speedy round packing)
+                    const speedStep = dt * 1000;
+
+                    for (let step = 0; step < steps; step++) {
+                        simTime += dt;
+                        matchDuration += dt; // Clock ticks inside control panel with perfect proportional scaling
+                        roundTimer += dt; // Current round timeline clock
+
+                        // Faster auto-release drops (decreased from 0.6s to 0.35s spawn interval for speedy round packing)
                         if (spawnQueue.length > 0) {
-                            lastSpawnTime += 0.015;
-                            if (lastSpawnTime >= 0.6) {
+                            lastSpawnTime += dt;
+                            if (lastSpawnTime >= 0.35) {
                                 spawnNextMarble();
                                 lastSpawnTime = 0;
                             }
@@ -817,16 +867,29 @@
                         bootAngle += 0.055;
                         Body.setAngle(bootSpinner, bootAngle);
 
-                        // Sweeper vertical patrol (Fully locked above the grass floor)
-                        const sweeperY = 1750 + Math.sin(simTime * 2.0) * 150;
+                        // ⚡ RHYTHMIC TACTICAL WAVE & BREAKDOWN WINDOWS ⚡
+                        // 12-Second Defensive cycle loops indefinitely
+                        const cycleTime = simTime % 12;
+                        let sweeperY, jumperY, goalieY;
+
+                        if (cycleTime > 8) {
+                            // "DEFENSE BREAKDOWN WINDOW" (Seconds 8 to 12)
+                            // Defenders align to open a giant gap, allowing balls to rush past!
+                            isDefendersWindowOpen = true;
+                            sweeperY = 1950;
+                            jumperY = 1350;
+                            goalieY = 1920;
+                        } else {
+                            // "MEXICAN FORMATION WAVE" (Seconds 0 to 8)
+                            // Keepers dance in a satisfying synchronized rhythmic sweep!
+                            isDefendersWindowOpen = false;
+                            sweeperY = 1750 + Math.sin(simTime * 1.5) * 150;
+                            jumperY = 1680 + Math.sin(simTime * 1.5 - 1.2) * 255;
+                            goalieY = 1720 + Math.sin(simTime * 1.5 - 2.4) * 200;
+                        }
+
                         Body.setPosition(defenderSweeper, { x: defenderSweeper.position.x, y: sweeperY });
-
-                        // Jumper vertical bounce jumps (Takes off perfectly from ground floor!)
-                        const jumperY = 1680 + Math.sin(simTime * 1.8) * 255;
                         Body.setPosition(defenderJumper, { x: defenderJumper.position.x, y: jumperY });
-
-                        // Goalie vertical jumps (Leaps vertically up to top net!)
-                        const goalieY = 1720 + Math.sin(simTime * 2.4) * 200;
                         Body.setPosition(defenderGoalie, { x: defenderGoalie.position.x, y: goalieY });
 
                         Engine.update(engine, speedStep);
@@ -959,7 +1022,7 @@
             ctx.fill();
             ctx.restore();
 
-            // 3. Draw Goalkeepers (Using proportional renderer - feet never clip!)
+            // 3. Draw Goalkeepers (Keepers remain at their natural dimensions!)
             drawFootballerCharacter(ctx, defenderSweeper, '#10b981', '#047857'); // Sweeper - Green
             drawFootballerCharacter(ctx, defenderJumper, '#2563eb', '#1e40af');  // Jumper - Blue
             drawFootballerCharacter(ctx, defenderGoalie, '#a855f7', '#7e22ce');  // Goalie - Purple
@@ -1032,6 +1095,15 @@
             ctx.font = '900 52px Roboto, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(`Spots left: ${leftSpots}`, 1745, 410);
+
+            // Blinking Defensive Gap Warning Alert Bar on canvas!
+            if (isDefendersWindowOpen) {
+                let blinkAlpha = 0.5 + Math.sin(Date.now() * 0.015) * 0.45;
+                ctx.fillStyle = `rgba(239, 68, 68, ${blinkAlpha})`; // Blinking Vibrant Red
+                ctx.font = '900 40px Share Tech Mono, monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(`⚡ DEFENSE BREAKDOWN: GOAL WINDOW OPEN ⚡`, 1745, 480);
+            }
             ctx.restore();
 
             // 9. Draw Left Commentary Live Logs directly on canvas
@@ -1064,7 +1136,7 @@
             });
             ctx.restore();
 
-            // 10. Draw standings on Right Sidebar (Width expanded to 875px)
+            // 10. Draw standings on Right Sidebar
             ctx.save();
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 42px Roboto, sans-serif';
@@ -1189,7 +1261,7 @@
 
                 ctx.fillStyle = '#94a3b8';
                 ctx.font = '700 48px Share Tech Mono, monospace';
-                ctx.fillText(`Looping match in ${overlayTimeLeft}s...`, 1745, 1650);
+                ctx.fillText(`Tournament Finished! Click 'Restart Match' above to play again.`, 1745, 1650);
             }
 
             ctx.restore();
